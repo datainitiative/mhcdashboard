@@ -1,0 +1,9 @@
+{% extends "admin/base.html" %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}{{ title }} | MHC Dashboard{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% setting 'ROOT_APP_URL' %}/home/">MHC Dashboard</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

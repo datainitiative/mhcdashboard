@@ -1,0 +1,214 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Output Export Builder| MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style type="text/css" media="all">
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+	margin-left: 10px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+.liquidFillGaugeText{
+	font-family: Helvetica;
+	font-weight: bold;
+}
+.bullet { font: 10px sans-serif; }
+.bullet .marker { stroke: #000; stroke-width: 0px; }
+.bullet .tick line { stroke: #666; stroke-width: .5px; }
+.bullet .range.s0 { fill: #eee; }
+.bullet .range.s1 { fill: #ddd; }
+.bullet .range.s2 { fill: #ccc; }
+.bullet .measure.s0 { fill: lightsteelblue; }
+.bullet .measure.s1 { fill: steelblue; }
+.bullet .title { font-size: 14px; font-weight: bold; }
+.bullet .subtitle { fill: #999; }
+.highlightbox{
+    border-color: rgb(240, 173, 78);
+    border-style: solid;
+    border-width: 0px;
+    box-sizing: border-box;
+    margin: 10px;
+    padding: 10px;
+}
+.highlightbox p{
+    font-family: Calibri;
+	font-size: 18px;
+    font-style: italic;
+	font-weight: bold;
+	color: #dd7636; /*rgb(138,192,7);rgb(240,173,78);#dd7636*/
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+</style>
+<style type="text/css" media="screen">
+.row-Bullet{
+	margin-bottom: 10px;
+}
+.btn-print{
+	margin-top: -7px;
+}
+.btn-pdf{
+	margin-left: 10px;
+	margin-top: -7px;
+}
+</style>
+<style type="text/css" media="print">
+#topnavbar{
+	display: none;
+}
+#breadcrumbs{
+	display: none;
+}
+.row-Bullet{
+	margin-bottom: 0px;
+}
+div.panel-report{
+	border-width: 0px;
+}
+div.panel-report .panel-heading{
+	margin-bottom: 0px;
+}
+div.panel-wpd{
+	page-break-inside: avoid;
+	page-break-after: always;
+}
+div.panel-wpd-end{
+	page-break-after: avoid;
+}
+div.highlightbox{
+	width: 250px;
+	height: 250px;
+	margin-top: -200px;
+	float: right;
+}
+.highlightbox p{
+	color: #dd7636 !important;
+}
+#btn-print{
+	display: none;
+}
+#btn-pdf{
+	display: none;
+}
+.col-xs-3,.col-xs-6,.col-xs-9, col-xs-12{
+	padding: 15px !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+<li>Output Report</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<div class="row">
+		<div class="col-md-12 col-lg-12">
+			<div class="panel panel-primary panel-report">
+				<div class="panel-heading">
+					Report - Summary of Outputs in all closed reporting quarters (2015: {{closed_reporting_quarters}})
+					<a id="btn-pdf" class="btn btn-warning pull-right btn-pdf" href="{% setting 'ROOT_APP_URL' %}/output/report/customreport/pdf/"><i class="fa fa-file-pdf-o"></i> Save PDF</a>
+					<button id="btn-print" class="btn btn-warning pull-right btn-print"><i class="fa fa-print"></i> Print</button>
+				</div>
+				<div id="report-container" class="panel-body"></div>
+				<div class="panel-footer">
+					<p>* No outputs were designated to be reported in current quarter.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block bottomjs %}
+	<script src='{% static "d3-3.5.5/d3.min.js" %}'></script>
+    <script src='{% static "bullet/bullet.js" %}'></script>
+	<script src='{% static "customdashboard/barandpiechart/outputreport/bullet_report.js"%}'></script>
+	<script>
+		$( document ).ready(function() {
+			var barAndPieChartData = jQuery.parseJSON('{{barpiechart_data|safe}}');
+			var wpds = jQuery.parseJSON('{{workplan_directions|safe}}');
+			var highlightText = jQuery.parseJSON('{{highlight_text|safe}}');
+			console.log(highlightText);
+			$.each(wpds,function(index,wpd){
+				var wpd_panel = $("#report-container").append(
+				'<div id="panel-wpd-'+index+'" class="panel panel-default panel-wpd">'+
+					'<div class="panel-heading"><strong>Work Plan Direction '+wpd.str_id+': '+wpd.description+'</strong></div>'+
+					'<div class="panel-body">'+
+						'<div id="pie-'+wpd.str_id+'" class="col-sm-3 col-md-3 col-lg-3"></div>'+
+						'<div id="bullet-'+wpd.str_id+'" class="col-sm-3 col-md-9 col-lg-9 bullet-container"></div>'+
+					'</div>'+
+				'</div>');
+				dashboard("#pie-"+wpd.str_id,'#bullet-'+wpd.str_id,barAndPieChartData[index]);
+				var wpd_panel_hightlight = $("#pie-"+wpd.str_id).append(
+                    '<div id="wpd-highlight-txt-'+wpd.str_id+'" class="highlightbox"></div>'
+                );
+                var highlightboxheight = $("#reportPanel-"+wpd.str_id).height()-400;
+                if (highlightboxheight<150){highlightboxheight=150;}
+                $("#wpd-highlight-txt-"+wpd.str_id).height(highlightboxheight);
+			});
+			$("#panel-wpd-"+(wpds.length-1).toString()).addClass("panel-wpd-end");
+			$.each(highlightText,function(index,txt){
+				var wpd = Object.keys(txt)[0];
+				var wpd_panel_hightlight = $("#wpd-highlight-txt-"+wpd).append(
+					'<p id="dragtxt-'+wpd+'">'+txt[wpd]+'</p>'
+                );
+			});
+			$("#btn-print").click(function(){
+				window.print();
+			});
+		});
+	</script>
+{% endblock %}

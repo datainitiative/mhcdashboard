@@ -1,0 +1,126 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls admin_static admin_modify bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block extrahead %}{{ block.super }}
+{% url 'admin:jsi18n' as jsi18nurl %}
+<script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/" }}"></script>
+{{ media }}
+{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />{% endblock %}
+
+{% block coltype %}{% if ordered_objects %}colMS{% else %}colM{% endif %}{% endblock %}
+
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} change-form{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+</ul>
+{% endblock %}
+{% endif %}
+
+{% block object-tools %}
+{% if change %}{% if not is_popup %}
+<div id="content-navbar-collapse" class="navbar-collapse collapse">
+  <ul class="nav navbar-nav navbar-right">
+    {% block object-tools-items %}
+	{% if user|has_group:"Superuser" or user|has_group:"MHC Admin" %}
+		<li>
+			{% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+			<a role="button" href="{% add_preserved_filters history_url %}" class="historylink">{% trans "History" %}</a>
+		</li>
+	{% endif %}
+    {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="viewsitelink">{% trans "View on site" %}</a></li>{% endif%}
+    <!-- code for adding Previous and Next button -->
+	{% if original.previous %}<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/{{opts.app_label}}/{{opts.verbose_name|cut:" "|lower}}/{{original.previous.id}}"><< Previous </a></li>{% endif %}
+	{% if original.next %}<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/{{opts.app_label}}/{{opts.verbose_name|cut:" "|lower}}/{{original.next.id}}">Next >></a></li>{% endif %}
+	<!-- code for adding Previous and Next button -->
+	{% endblock %}
+  </ul>
+</div>
+{% endif %}{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% with module_name=opts.model_name|lower|slugify %}
+    {% render_with_template_if_exist opts.app_label|lower|add:"/admin_model_"|add:module_name|add:"_change_form.html" "" %}
+{% endwith %}
+
+
+<form class="form-horizontal" {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %}
+    <div class="alert alert-warning">{% blocktrans %}Fields in <strong>bold</strong> are required.{% endblocktrans %}</div>
+    {% if errors %}
+    <div class="alert alert-danger">
+        {% blocktrans count counter=errors|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+        {{ adminform.form.non_field_errors }}
+    </div>
+    {% endif %}
+	{% if has_add_permission %}
+    {% if save_on_top %}{% block submit_buttons_top %}{% submit_row %}<br/><br/><br/>{% endblock %}{% endif %}
+	{% endif %}
+    <div id="content-main">
+        <div>
+        {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
+
+        {% block field_sets %}
+        {% for fieldset in adminform %}
+          {% include "admin/includes/fieldset.html" with group_column_width=adminform|form_fieldset_column_width %}
+        {% endfor %}
+        {% endblock %}
+
+        {% block after_field_sets %}{% endblock %}
+
+        {% block inline_field_sets %}
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+        {% endblock %}
+
+        {% block after_related_objects %}{% endblock %}
+
+        {% if adminform and add %}
+        <script type="text/javascript">
+            (function($) {
+                $(document).ready(function() {
+                    $('form#{{ opts.model_name }}_form :input:visible:enabled:first').focus();
+                });
+            })(django.jQuery);
+        </script>
+        {% endif %}
+
+        {# JavaScript for prepopulated fields #}
+        {% prepopulated_fields_js %}
+
+        </div>
+    </div>
+
+    <div class="form-actions">
+		{% if has_add_permission %}
+        {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+		{% endif %}
+    </div>
+</form>
+{% endblock %}

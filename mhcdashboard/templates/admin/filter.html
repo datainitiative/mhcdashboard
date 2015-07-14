@@ -1,0 +1,14 @@
+<!--
+	This is a customized filter.html included in change_list.html for displaying filters in select box in Django Admin Site model page.
+-->
+{% load i18n %}       
+<strong>{% blocktrans with title as filter_title %}{{ filter_title }} {% endblocktrans %}</strong>
+<div style="padding-right:10px; padding-bottom:10px;">
+  <select onChange="javascript:window.location = this.options[this.selectedIndex].value;" style="width:100%">
+    {% for choice in choices %}
+      <option {% if choice.selected %}selected{% endif %} value="{{ choice.query_string|iriencode }}">
+        {{ choice.display }}
+      </option>
+    {% endfor %}           
+  </select>                
+</div>

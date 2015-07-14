@@ -1,0 +1,359 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Indicators | MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style>
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+	margin-left: 50px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li>Indicator</li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="panel panel-yellow">
+				<div class="panel-heading text-center">
+					<div class="mid-huge">Indicators Tracking Success - 2010 Base Year Existing Conditions</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="lead mid-huge text-center text-warning">Reduce percentage of income spent on transportation by low-income households to 20%</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<br/>
+						<i class="fa fa-car fa-4x"></i> &nbsp;<span class="text-muted" style="font-size:24px"><strong>21%</strong></span>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Percentage of monthly income currently spent on transportation for those making less than 50% AMI</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/1/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="lead mid-huge text-center text-warning">Increase percentage of affordable housing stock and space for community serving facilities 
+				located near trasit by ensuring 25% of new units created are restricted affordable.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<br/>
+						 <span class="text-muted" style="font-size:24px"><strong>6.2%</strong></span><i class="fa fa-home fa-5x">|</i><i class="fa fa-building fa-5x"></i> &nbsp;<span class="text-muted" style="font-size:24px"><strong>23%</strong></span>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Share of federally  subsidized housing units and square footage of development that has tax
+						exempt status within 1/2 mile of light rail stations</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/2/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+		<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Preserve 90% of existing affordable near transit.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<br/>
+						<div class="row">
+							<div class="col-xs-6 text-right">
+								<strong>90%</strong> <i class="fa fa-circle-o-notch fa-rotate-270 fa-5x"></i>
+							</div>
+							<div class="col-xs-6 text-left">
+								<span class="text-muted" style="font-size:22px"><strong>5,080</strong><br/>
+								&nbsp;<small>- of -</small><br/>
+								<strong>5,645</strong></span>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Existing affordable that has been preserved within 1/2 mile of light rail stations</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/3/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Increase number of jobs available for middle-skill workers near transit stations.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center"><br/>
+						<div class="row">
+							<div class="col-xs-11">
+								<span class="text-muted" style="font-size:24px"><strong>24%&nbsp;</strong></span>
+								<i class="fa fa-user fa-4x text-primary"></i><i class="fa fa-user fa-4x text-muted"></i><br/>
+								<span class="text-muted" style="font-size:24px"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong></span>
+								<i class="fa fa-user fa-4x text-muted"></i><i class="fa fa-user fa-4x text-muted"></i>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Number / share of jobs available for workers with some college or associate's degree within 1/2 mile of transit stations</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/4/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+		<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Increase percentage of businesses in Metro Denver that provide transit benefits to employees.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<br/>
+						<i class="fa fa-line-chart fa-5x"></i>
+						<span class="text-muted" style="font-size:24px"><strong>44%</strong></span>
+						<h3><small>100+ Employees</small></h3>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Number of businesses participating in EcoPass or FlexPass programs as a percentage of all businesses in the Metro Denver area</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/5/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Increase percent of people in disadvantaged communities who walk / bike or take transit to work.</div>
+				<div class="row">
+					<div class="col-xs-4 text-primary">
+						<div class="row">
+							<div class="col-xs-5 text-right">
+								<h2><i class="fa fa-pie-chart fa-3x"></i></h2>
+							</div>
+							<div class="col-xs-7 text-left">
+								<br/>
+								<span class="text-muted" style="font-size:24px"><strong>7.5%</strong></span>
+								<small>&nbsp;Non-disadvantaged</small>
+								<br/><br/>
+								<span class="text-muted" style="font-size:24px"><strong>2.7%</strong></span>
+								<small>&nbsp;Disadvantaged</small>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Percentage of people in disadvantaged communities who commute to work by walking, taking public transit, or taxi / motorcycle / bicycle</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/6/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+		<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Decrease rate of turnover in schools as low-income families, families of color, and multilingual families move.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<div class="row">
+							<div class="col-xs-7 text-right">
+								<br/><br/>
+								<span class="text-muted" style="font-size:24px"><strong>12%</strong></span>
+								<small>White</small>
+								<br/><br/>
+								<span class="text-muted" style="font-size:24px"><strong>15%</strong></span>
+								<small>Non-white</small>
+							</div>
+							<div class="col-xs-5 text-left">
+								<h2><i class="fa fa-pie-chart fa-rotate-180 fa-3x"></i></h2>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Mobility rate of non-white students compared to white students in the 7-county Metro Denver area</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/7/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Increase percentage of high-performing schools accessible by transit.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<div class="row">
+							<div class="col-xs-5 text-right">
+								<h2><i class="fa fa-pie-chart fa-3x"></i></h2>
+							</div>
+							<div class="col-xs-7 text-left">
+								<br/>
+								<span class="text-muted" style="font-size:24px"><strong>80%</strong></span>
+								<small>< 1/2 mi.</small>
+								<br/><br/>
+								<span class="text-muted" style="font-size:24px"><strong>55%</strong></span>
+								<small>< 1/4 mi.</small>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Percentage of schools achieving Performance Plan status that are within 1/2 mile of all transit stops (bus & rail) vs. outside the 1/4 mile</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/8/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+		<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Decrease the percentage of low-income people who have low-access to full-service grocery stores near transit stops.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<div class="row">
+							<div class="col-xs-7 text-right">
+								<span class="text-muted" style="font-size:24px"><strong>1.8%</strong></span><br/>
+								<small>33% tract coverage</small>
+								<br/>
+								<span class="text-muted" style="font-size:24px"><strong>1.2%</strong></span><br/>
+								<small>50% tract coverage</small>
+							</div>
+							<div class="col-xs-5 text-left"><br/>
+								<span class="fa-stack fa-3x">
+									<i class="fa fa-apple fa-stack-1x text-danger"></i>
+									<i class="fa fa-ban fa-stack-2x"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted">Percentage of low-income people with low-access to healthy food in census tracts intersecting within 1/2 mile of transit stops</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/9/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg">
+				<div class="mid-huge text-center text-warning">Maintain or increase number of stops and frequency of routes in disadvantaged communities comparable to higher-income communities.</div>
+				<div class="row">
+					<div class="col-xs-4 text-center text-primary">
+						<br/>
+						<div class="row">
+							<div class="col-xs-5 text-right"><br/>
+								<i class="fa fa-bus fa-5x"></i>
+							</div>
+							<div class="col-xs-7 text-left">
+								<small>Non-disadvantaged</small><br/>
+								<span class="text-muted" style="font-size:24px"><strong>217</strong></span>
+								<br/>
+								<small>Disadvantaged</small><br/>
+								<span class="text-muted" style="font-size:24px"><strong>237</strong></span>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-6 text-left">
+						<blockquote><p><h3 class="text-muted"><br/>Number of people per stop in walkshed<br/> (1/4 mile for bus & 1/2 mile for rail)<br/>&nbsp;</h3></p></blockquote>
+					</div>
+				</div>
+        <div class="col-xs-12 text-right">
+          <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/10/">Indicator	Details <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div class="well well-lg text-muted text-left">
+				<u>SOURES</u>:
+				HUD Location Affordability Index, 2010 Early Warning System federal subsidized inventory, County Assessor Records, LEHD, RTD, ACS 5-Yr 2006-2010<br/>
+				Source: Colorado Department of Education, Colorado Department of Education, USDA Food Environment Atlas.
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

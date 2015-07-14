@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load custom_filter %}{% load custom_tag %}
+
+{% block navbar %}{% endblock %}
+{% block content %}
+<br/>
+<div class="alert alert-info">You have been logged out.</div>
+<br/>
+<h3>{% trans "Thanks for spending some quality time with the MHC Dashboard today." %}</h3>
+<br/><br/>
+<a href="{% url 'admin:index' %}login/?next={% setting 'ROOT_APP_URL' %}/home/" class="btn btn-outline btn-success btn-lg"><i class="fa fa-sign-in"></i> {% trans 'Log in again' %}</a>
+{% endblock %}
