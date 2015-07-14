@@ -1,0 +1,195 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls admin_static admin_list bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}{{ cl.opts.verbose_name|capfirst }} | MHC Dashboard{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}" />
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+  {% endif %}
+  {% if cl.formset or action_form %}
+    {% url 'admin:jsi18n' as jsi18nurl %}
+    <script type="text/javascript" src="{{ jsi18nurl|default:'../../jsi18n/' }}"></script>
+  {% endif %}
+  {{ media.css }}
+  	<style>
+		#searchbar{
+			height:34px;
+		}
+		.input-group-btn:last-child>.btn:not(:last-child):not(.dropdown-toggle){
+			border-top-right-radius: 4px !important;
+			border-bottom-right-radius: 4px !important;
+		}
+		.panel{
+			margin-bottom:0 !important;
+		}
+		.my-content-title{
+			color: #333;
+			float: left;
+			display: block;
+			font-size: 18px;
+			font-weight: bold;
+			line-height: 20px;
+			padding: 15px;
+		}
+	</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ media.js }}
+{% if action_form %}{% if actions_on_top or actions_on_bottom %}
+<script type="text/javascript">
+(function($) {
+    $(document).ready(function($) {
+        $("tr input.action-select").actions();
+    });
+})(django.jQuery);
+</script>
+{% endif %}{% endif %}
+{% endblock %}
+
+{% block bodyclass %}_change-list{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<ul class="breadcrumb">
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{% with app_label=cl.opts.app_config.verbose_name|default:cl.opts.app_label %}{% trans 'Admin' %}{% endwith %}</a></li>
+<li>
+  {% if not cl.opts.model_name == "indicator" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">{% endif %}
+  Indicator (Admin)
+  {% if not cl.opts.model_name == "indicator" %}</a>{% endif %}
+</li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li>
+  {% if not cl.opts.model_name == "workplanarea" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">{% endif %}
+  Workplan Area
+  {% if not cl.opts.model_name == "workplanarea" %}</a>{% endif %}
+</li>
+<li>
+  {% if not cl.opts.model_name == "mhcactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">{% endif %}
+  MHC Activity
+  {% if not cl.opts.model_name == "mhcactivity" %}</a>{% endif %}
+</li>
+<li>
+  {% if not cl.opts.model_name == "organization" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">{% endif %}
+  Organization
+  {% if not cl.opts.model_name == "organization" %}</a>{% endif %}
+</li>
+<li>
+  {% if not cl.opts.model_name == "organizationactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">{% endif %}
+  Organization Activity
+  {% if not cl.opts.model_name == "organizationactivity" %}</a>{% endif %}
+</li>
+<li>
+  {% if not cl.opts.model_name == "output" %}
+    {% if user|has_group:"Non-profit Staff" %}
+      <a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+    {% else %}
+      <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+    {% endif %}
+  {% endif %}
+  Output
+  {% if not cl.opts.model_name == "output" %}</a>{% endif %}
+</li>
+</ul>
+{% endblock %}
+{% endif %}
+
+{% block content_title %}
+	{% if title %}
+		<span class="my-content-title"><i class="fa fa-list-alt"></i> &nbsp;{{ cl.opts.verbose_name|capfirst }} List</span>
+	{% endif %}
+{% endblock %}
+
+{% block coltype %}flex{% endblock %}
+
+{% block object-tools %}
+	<div id="content-navbar-collapse" class="navbar-collapse collapse">
+		<ul class="object-tools nav navbar-nav navbar-right">
+			{% block object-tools-items %}
+			{% if has_add_permission %}
+			<li>
+			{% url cl.opts|admin_urlname:'add' as add_url %}
+			<a role="button" href="{% add_preserved_filters add_url is_popup %}" class="btn btn-primary">
+				<span class="glyphicon glyphicon-plus"></span> {% blocktrans with cl.opts.verbose_name as name %}Add New {{ name }}{% endblocktrans %}
+			</a>
+			</li>
+			{% endif %}
+			{% endblock %}
+		</ul>
+	</div>
+	<div class="panel panel-info">
+		<div class="panel-heading">
+			<div class="row">
+				{% if cl.has_filters %}
+				<div class="col-sm-1">
+					<h4><i class="fa fa-filter"></i>&nbsp; Filter</h4>
+				</div>
+				{% for spec in cl.filter_specs %}
+					<div class="col-sm-2">
+						{% admin_list_filter cl spec %}
+					</div>
+				{% endfor %}
+				<div class="col-sm-1 pull-right">
+					<button type="button" class="btn btn-info pull-right" onclick="window.location.href='?'">Clear Filter</button>
+				</div>
+				{% endif %}
+				{% block search %}{% search_form cl %}{% endblock %}
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block content %}
+<form class="" id="changelist-form" action="" method="post"{% if cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %}>{% csrf_token %}
+
+{% if cl.formset.errors %}
+<div class="alert alert-danger">
+    <p class="errornote">
+        {% blocktrans count cl.formset.errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+    </p>
+    {{ cl.formset.non_form_errors }}
+</div>
+{% endif %}
+
+
+{% with app_name=cl.opts.model_name|lower|slugify %}
+    {% render_with_template_if_exist cl.opts.app_label|lower|add:"/admin_app_"|add:app_name|add:"_description.html" "" %}
+{% endwith %}
+
+<div id="content-main">
+
+	{% if user|has_group:"MHC Admin" %}
+	{% if action_form and actions_on_top and cl.full_result_count %}
+		<div class='pull-left'>{% admin_actions %}</div>
+	{% endif %}
+	{% endif %}
+	
+    <div class="module{% if cl.has_filters %} filtered{% endif %}" id="_changelist">
+        {% block date_hierarchy %}
+            {% date_hierarchy cl %}
+        {% endblock %}
+			
+		{% if cl.formset %}
+			<div>{{ cl.formset.management_form }}</div>
+		{% endif %}
+
+        {% block result_list %}
+            {% result_list cl %}
+        {% endblock %}
+    </div>
+</div>
+
+
+{% block pagination %}{% pagination cl %}{% endblock %}
+</form>
+{% endblock %}

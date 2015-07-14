@@ -1,0 +1,242 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Output Export Builder| MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style type="text/css" media="all">
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+	margin-left: -5px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+	font-size: 12px;
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+.liquidFillGaugeText{
+	font-family: Helvetica;
+	font-weight: bold;
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+h3 small{
+	font-size: 60% !important;
+}
+.panel-highlight{
+	border-color: rgb(240, 173, 78) !important;
+    border-style: solid;
+    border-width: 2px !important;
+    box-sizing: border-box;
+	background-color: #fff !important;
+}
+.highlightbox{
+}
+.highlightbox p{
+    font-family: Calibri;
+	font-size: 18px;
+    font-style: italic;
+	font-weight: bold;
+	color: #dd7636; /*rgb(138,192,7);rgb(240,173,78);#dd7636*/
+}
+</style>
+<style type="text/css" media="screen">
+.row-LFG{
+	margin-bottom: 20px;
+}
+.svg-LFG{
+	display:inline-block;
+	margin-top: 20px;
+}
+.btn-print{
+	margin-top: -7px;
+}
+</style>
+<style type="text/css" media="print">
+#topnavbar{
+	display: none;
+}
+#breadcrumbs{
+	display: none;
+}
+.row-LFG{
+	margin-bottom: 0px;
+}
+.svg-LFG{
+	display:inline-block;
+	margin-top: 0px;
+}
+div.panel-report{
+	border-width: 0px;
+}
+div.panel-report .panel-heading{
+	margin-bottom: 30px;
+}
+div.panel-wpd{
+	page-break-inside: avoid;
+	page-break-after: always;
+}
+div.panel-wpd-end{
+	page-break-after: avoid;
+}
+#btn-print{
+	display: none;
+}
+.col-xs-3,.col-xs-6,.col-xs-9, col-xs-12{
+	padding: 15px !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+<li>Output Report Builder</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<div class="panel panel-primary panel-report">
+				<div class="panel-heading">
+					Report - Summary of Outputs in all closed reporting quarters (2015: {{closed_reporting_quarters}})
+					<button id="btn-createreport-1" class="btn btn-warning pull-right btn-print"><i class="fa fa-arrow-circle-right"></i> Create Report</button>
+					<input id="url-createreport" type="hidden" value="{% setting 'ROOT_APP_URL' %}/output/report/"></input>
+				</div>
+				<div id="report-container" class="panel-body"></div>
+				<div class="panel-footer">
+					<button id="btn-createreport-2" class="btn btn-large btn-block btn-warning">Create Report</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block bottomjs %}
+	<script src='{% static "jquery.cookie/jquery.cookie.js" %}'></script>
+	<script src='{% static "d3-3.5.5/d3.min.js" %}'></script>
+	<script src='{% static "liquidFillGauge/liquidFillGauge.js" %}'></script>
+	<script src='{% static "customdashboard/barandpiechart/outputreport/barpiechart_report.js"%}'></script>
+	<script src='{% static "bullet/bullet.js" %}'></script>
+	<script>
+		function updateText(wpd){
+			wpd = wpd.slice(-1);
+			$("#dragtxt-"+wpd).text($("#mytxt-"+wpd).val());
+			$("#mytxt-count-"+wpd).html($("#mytxt-"+wpd).val().length + " characters out of 255");
+		}
+		
+		function createReport(){
+			var csrftoken = $.cookie('csrftoken');
+
+			var url=$("#url-createreport").val()+"customreport/";
+			var form = $(
+				'<form action="'+url+'" method="POST">'+
+				'<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
+					'<input type="txt" name="A" value="'+$("#mytxt-A").val()+'">'+
+					'<input type="txt" name="B" value="'+$("#mytxt-B").val()+'">'+
+					'<input type="txt" name="C" value="'+$("#mytxt-C").val()+'">'+
+					'<input type="txt" name="D" value="'+$("#mytxt-D").val()+'">'+
+					'<input type="txt" name="E" value="'+$("#mytxt-E").val()+'">'+
+				'</form>'
+			);
+			form.appendTo('body').submit();
+		}
+		
+		$( document ).ready(function() {
+			var barAndPieChartData = jQuery.parseJSON('{{barpiechart_data|safe}}');
+			var wpds = jQuery.parseJSON('{{workplan_directions|safe}}');
+			var pie_dim = [150,150]
+			var gauge_dim = [60,60];
+			$.each(wpds,function(index,wpd){
+				var wpd_panel = $("#report-container").append(
+				'<div class="row">'+
+                    '<div class="col-sm-3 col-md-3 col-lg-3">'+
+                        '<div id="txtBuilderPanel-'+wpd.str_id+'" class="panel panel-default">'+
+                            '<div class="panel-heading">Add Quarter Report Narrative</div>'+
+                            '<div class="panel-body">'+
+								'<div id="drag-alert-'+wpd.str_id+'" class="alert alert-danger" style="display:none">'+
+									'Please type text in the box below.'+
+								'</div>'+
+                                '<textarea class="form-control" placeholder="Type in your text here." id="mytxt-'+wpd.str_id+'" rows="14" maxlength="255"></textarea>'+
+								'<p id="mytxt-count-'+wpd.str_id+'" class="text-muted">0 characters out of 255</p>'+
+                            '</div>'+
+                        '</div>'+
+                    '</div>'+
+                    '<div class="col-sm-9 col-md-9 col-lg-9">'+
+					'<div id="panel-wpd-'+index+'" class="panel panel-default panel-wpd">'+
+						'<div class="panel-heading"><strong>Work Plan Direction '+wpd.str_id+': '+wpd.description+'</strong></div>'+
+						'<div class="panel-body">'+
+							'<div id="pie-'+wpd.str_id+'" class="col-xs-4 col-sm-3 col-md-3 col-lg-3"></div>'+
+							'<div id="gauge-'+wpd.str_id+'" class="col-xs-8 col-sm-9 col-md-9 col-lg-9"></div>'+
+							'<div id="bullet-'+wpd.str_id+'" class="col-xs-8 col-sm-9 col-md-9 col-lg-9 bullet-container"></div>'+
+						'</div>'+
+						'<div class="panel-footer panel-highlight">'+
+							'<div id="wpd-highlight-txt-'+wpd.str_id+'" class="highlightbox">'+
+							'<p id="dragtxt-'+wpd.str_id+'"></p>'+
+							'</div>'+
+						'</div>'+
+					'</div>'+
+				'</div>');
+				dashboard("#pie-"+wpd.str_id,'#gauge-'+wpd.str_id,barAndPieChartData[index],pie_dim,gauge_dim);
+				$("#txtBuilderPanel-"+wpd.str_id).height($("#panel-wpd-"+index).height());
+			});
+			$("#panel-wpd-"+(wpds.length-1).toString()).addClass("panel-wpd-end");
+			$("#btn-print").click(function(){
+				window.print();
+			});
+			
+			$("textarea").keyup(function(){updateText(this.id);});
+			$("textarea").change(function(){updateText(this.id);});
+			
+			$("#btn-createreport-1").click(function(){createReport();});
+			$("#btn-createreport-2").click(function(){createReport();});
+		});
+	</script>
+{% endblock %}

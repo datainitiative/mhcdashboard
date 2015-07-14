@@ -1,0 +1,119 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Login Instruction | MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style>
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+	margin-left: 50px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <br/>
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3>New User Login Instructions</h3>
+        </div>
+        <div class="panel-body">
+          <ul class="nav nav-tabs">
+            <li class="active">
+              <a href="#step1" data-toggle="tab" aria-expanded="true">Step 1</a>
+            </li>
+            <li>
+              <a href="#step2" data-toggle="tab" aria-expanded="false">Step 2</a>
+            </li>
+            <li>
+              <a href="#step3" data-toggle="tab" aria-expanded="false">Step 3</a>
+            </li>
+            <li>
+              <a href="#step4" data-toggle="tab" aria-expanded="false">Step 4</a>
+            </li>
+            <li>
+              <a href="#step5" data-toggle="tab" aria-expanded="false">Step 5</a>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane fade active in" id="step1">
+              <br/>
+              <p>Click <a href="http://54.153.125.98/mhcdashboard/admin/login/?next=/mhcdashboard/mhcdashboard/user/profile/" target="_blank" class="btn btn-outline btn-primary btn-sm">here</a> to go to Log-in Page</p>
+              <p>Enter the <strong>User Name</strong> and <strong>default Password</strong> that you received in E-mail to log in.</p>
+              <p><strong>Screen-shot</strong> <i class="fa fa-arrow-circle-down"></i></p>
+              <img src='{% static "img/login_instruction/step1.png" %}'>
+            </div>
+            <div class="tab-pane fade" id="step2">
+              <br/>
+              <p>After successful login, you will land in <strong>User Profile</strong> page.</p>
+              <p>Click <span class="btn btn-outline btn-primary btn-sm"><i class="fa fa-lock"></i> Change Password</span> to set your new password.</p>
+              <p><strong>Screen-shot</strong> <i class="fa fa-arrow-circle-down"></i></p>
+              <img src='{% static "img/login_instruction/step2.png" %}'>
+            </div>
+            <div class="tab-pane fade" id="step3">
+              <br/>
+              <p>In <strong>Old password</strong>, enter the default password that you received in E-mail.</p>
+              <p>Enter your new password, and click <span class="btn btn-outline btn-primary btn-sm">Change</span> to save your new password.</p>
+              <p><strong>Screen-shot</strong> <i class="fa fa-arrow-circle-down"></i></p>
+              <img src='{% static "img/login_instruction/step3.png" %}'>
+            </div>
+            <div class="tab-pane fade" id="step4">
+              <br/>
+              <p>After you successfully set your new password, you will be logged out for security considerations and re-directed to the log-in page.</p>
+              <p>User your user name and your <strong>new</strong> password to log in again.</p>
+              <p><strong>Screen-shot</strong> <i class="fa fa-arrow-circle-down"></i></p>
+              <img src='{% static "img/login_instruction/step4.png" %}'>
+            </div>
+            <div class="tab-pane fade" id="step5">
+              <br/>
+              <p>After re-login, you will land in <strong>User Profile</strong> page again.</p>
+              <p>Change your <strong>Personal Information</strong> if necessary.</p>
+              <p>Now, you have successfully set up your user profile. Click the page title <strong>"MHC Dashboard"</strong> to go to the <strong>Home Page</strong>.</p>
+              <p><strong>Screen-shot</strong> <i class="fa fa-arrow-circle-down"></i></p>
+              <img src='{% static "img/login_instruction/step5.png" %}'>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <a href="http://54.153.125.98/mhcdashboard/admin/login/?next=/mhcdashboard/mhcdashboard/user/profile/" target="_blank">Click here to login <i class="fa fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
+		</div>
+	</div>
+</div>
+{% endblock %}

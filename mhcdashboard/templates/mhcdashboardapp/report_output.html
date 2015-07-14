@@ -1,0 +1,361 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Report Output | MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style>
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+	margin-left: 50px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+div._inline-group{
+	margin: 40px 20px 10px 20px !important;
+}
+td.field-description{
+	width: 200px;
+}
+td.field-is_goal{
+	width: 50px;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">Output List</a></li>
+<li>Report Output</li>
+{% else %}
+<li>Output</li>
+{% endif %}
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h4 class="alert alert-info"><i class="fa fa-filter"></i> Filter by Organization Activity</h4>
+    <fieldset class="_module _aligned" id="fieldset-1" style="background:transparent">
+      <div class="fields">
+        <div class="row">
+          <div class="control-group field-organization">
+            <div class="col-md-12 form-group">
+              <div class="control-label col-md-2">
+                <label class="required" for="id_organization">Organization:</label>
+              </div>
+              <div class="controls col-md-10">
+                <p>{{organization.name}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="control-group field-active_quarter">
+            <div class="col-md-12 form-group">
+              <div class="control-label col-md-2">
+                <label class="required" for="id_active_quarter">Report Quarter:</label>
+              </div>
+              <div class="controls col-md-10">
+                <p>Q{{report_quarter}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="control-group field-workplan_area">
+            <div class="col-md-12 form-group">
+              <div class="control-label col-md-2">
+                <label class="required" for="id_workplan_area">Workplan Area:</label>
+              </div>
+              <div class="controls col-md-10">
+                <select class="form-control form-control-inline" id="id_workplan_area" name="workplan_area" title data-original-title>
+                  <option value>---------</option>
+                  {% for wa in workplan_areas %}
+                    <option value="{{wa.id}}">{{wa.str_id}}: {{wa.description}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="control-group field-mhc_activity">
+            <div class="col-md-12 form-group">
+              <div class="control-label col-md-2">
+                <label class="required" for="id_mhc_activity">MHC Activity:</label>
+              </div>
+              <div class="controls col-md-10">
+                <select class="form-control form-control-inline" id="id_mhc_activity" name="mhc_activity" title data-original-title>
+                  <option value>---------</option>
+                  {% for mhca in mhc_activities %}
+                    <option value="{{mhca.id}}">{{mhca.str_id}}: {{mhca.description}}</option>
+                  {% endfor %}
+                </select>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="control-group field-org_activity">
+            <div class="col-md-12 form-group">
+              <div class="control-label col-md-2">
+                <label class="required" for="id_org_activity">Organization Activity:</label>
+              </div>
+              <div class="controls col-md-10">
+                <select class="form-control form-control-inline" id="id_org_activity" name="org_activity" title data-original-title>
+                  <option value>---------</option>
+                  {% for orga in org_activities %}
+                    <option value="{{orga.id}}">{{orga.str_id}}: {{orga.description}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+    <div class="row">
+      <div class="col-md-5">
+        <button id="btn-getoutputs" class="btn btn-primary">Show Outputs</button>
+      </div>
+      <div class="col-md-5">
+      </div>
+      <div class="col-md-2">
+        <button id="btn-getoutputs-showall" class="btn btn-info">Show All Q{{report_quarter}} Outputs</button>
+      </div>
+    </div>
+    <div class="row">
+      <form class="form-horizontal" method="post" id="output_form">{% csrf_token %}
+        {% if save_msg %}
+          <br/>
+          <div class="alert alert-success">{{save_msg}}</div>
+        {% endif %}
+        {% if error_msg %}
+          <br/>
+          <div class="alert alert-danger">{{error_msg}}</div>
+        {% endif %}
+        <div class="row">
+          <div class="col-md-12">
+            <div class="_inline-group" id="output_set-group">
+              <div class="tabular">
+                <fieldset class="module">
+                  <h2>Outputs</h2>
+                  <table class="table table-striped table-bordered">
+                    <thead>
+                      <tr>
+					    <th>Organization<br/>Activity ID</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Output Value</th>
+                        <th>Comment</th>
+                        <th>Goals Reached?</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for op in outputs_current %}
+                        <tr class="table-outputs-row table-outputs-row-{{op.orgnization_activity.id}}">
+						  <td class="field-orgactivity">
+							{{op.orgnization_activity.str_id}}
+						  </td>
+                          <td class="field-description">
+                            {{op.description}}
+                          </td>
+                          <td class="field-location">
+                            <input class="form-control vTextField" id="id_output_set-{{op.id}}-location" maxlength="100" name="id_output_set-{{op.id}}-location" placeholder="Location" title type="text" value="{{op.location}}" data-original-title autocomplete="off">
+                          </td>
+                          <td class="field-output_value">
+                            <input class="form-control vTextField" id="id_output_set-{{op.id}}-output_value" maxlength="100" name="id_output_set-{{op.id}}-output_value" placeholder="Output Value" title type="text" value="{{op.output_value}}" data-original-title autocomplete="off">
+                          </td>
+                          <td class="field-comment">
+                            <textarea class="form-control vLargeTextField" id="id_output_set-{{op.id}}-comment" maxlength="500" name="id_output_set-{{op.id}}-comment" placeholder="Comment" rows="4" title data-original-title autocomplete="off">{% if op.comment != None %}{{op.comment}}{% endif %}</textarea>
+                          </td>
+                          <td class="field-is_goal">
+                            {{op.get_is_goal_display}}
+                          </td>
+                        </tr>
+                      {% endfor %}
+                      <tr class="form-row row">
+                    </tbody>
+                  </table>
+                </fieldset>
+              </div>
+            </div>
+
+            <input type="submit" value="Save Changes" name="_save" class="btn btn-success btn-lg">
+            <input type="hidden" id="OrgActID" name="OrgActID" value="">
+          </div>
+        </div>
+      </form>
+    </div>
+	<br/>
+	<div class="row">
+		<div class="col-md-12">
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a data-toggle="collapse" href="#panel-other-outputs" aria-expanded="true">Show Previous Quarters Output</a>
+					</h4>
+				</div>
+				<div class="panel-collapse collapse" id="panel-other-outputs">
+					<div class="panel-body">
+						{% if outputs_previous %}
+							<div class="dataTable_wrapper">
+								<div class="table-responsive">
+									<table class="table table-striped table-bordered table-hover" id="data-table">
+										<thead>
+											<tr>
+												<th>Report Quarter</th>
+												<th>Description</th>
+												<th>Location</th>
+												<th>Output Value</th>
+												<th>Comment</th>
+                                                <th>Goals Reached?</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for op in outputs_previous %}
+												<tr class="table-outputs-row table-outputs-row-{{op.orgnization_activity.id}}">
+													<td>Q{{op.active_quarter.quarter}}</td>
+													<td>{{op.description}}</td>
+													<td>{{op.location}}</td>
+													<td>{{op.output_value}}</td>
+													<td>{{op.comment}}</td>
+                                                    <td>{{op.get_is_goal_display}}</td>
+												</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						{% else %}
+							The current report is Quarter 1, 2015. There is currently no previous quarter outputs to view.
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+{% block bottomjs %}
+<script src='{% static "datatables/media/js/jquery.dataTables.min.js"%}'></script>
+<script src='{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"%}'></script>
+<script>
+	<!-- Override admin title -->
+	$('._inline-group').find('h2').text('Report Outputs for 2015 Quarter {{report_quarter}}');
+	<!-- Pre-select options if form is submitted -->
+	if('{{select_options}}'!=="None")
+	{
+		$('#id_workplan_area').val('{{select_options.select_wp_area_id}}');
+		$('#id_mhc_activity').val('{{select_options.select_mhc_act_id}}');
+		$('#id_org_activity').val('{{select_options.select_org_act_id}}');
+		$('#OrgActID').val('{{select_options.select_org_act_id}}');
+		$('.table-outputs-row').hide();
+		$('.table-outputs-row-'+'{{select_options.select_org_act_id}}').show();
+	}
+	<!-- Filter outputs based on selections -->
+	$('#btn-getoutputs').click(function(){
+		select_org_act_id = $('#id_org_activity option:selected').val().toString();
+		$('#OrgActID').val(select_org_act_id);
+		$('.table-outputs-row').hide();
+		$('.table-outputs-row-'+select_org_act_id).show();
+	});
+	<!-- show all outputs in the current report quarter -->
+	$('#btn-getoutputs-showall').click(function(){
+		$('.table-outputs-row').show();
+		$('#id_workplan_area').val([]);
+		$('#id_mhc_activity').val([]);
+		$('#id_org_activity').val([]);
+		$('#OrgActID').val('');
+	});
+	
+	<!-- function to dynamically change selected options -->
+	function fill_field(val, init_value, query_model, fire_model, fire_element, initalOptions){
+		$.getJSON('{% setting 'ADMIN_ROOT_URL' %}'+'/chaining/filter/mhcdashboardapp/'+query_model+'/'+fire_model+'/'+val+'/', function(j){
+			var options = '<option value="">---------<'+'/option>';
+			for (var i = 0; i < j.length; i++) {
+                if($.inArray(j[i].value,initalOptions)>-1){
+				options += '<option value="' + j[i].value + '">' + j[i].display + '<'+'/option>';
+                }
+			}
+			var width = $('#'+fire_element).outerWidth();
+			$('#'+fire_element).html(options);
+			if (navigator.appVersion.indexOf('MSIE') != -1)
+				$('#'+fire_element).width(width + 'px');
+			$('#'+fire_element+' option:first').attr('selected', 'selected');
+			var auto_choose = true;
+			if(init_value){
+				$('#'+fire_element+' option[value="'+ init_value +'"]').attr('selected', 'selected');
+			}
+			if(auto_choose && j.length == 1){
+				$('#'+fire_element+' option[value="'+ j[0].value +'"]').attr('selected', 'selected');
+			}
+			$('#'+fire_element).trigger('change');
+		})
+	}
+	<!-- on Workplan Area change, filter MHC Activities -->
+	$('#id_workplan_area').change(function(){
+		var start_value = $('#id_mhc_activity').val();
+		var val = $(this).val();
+        var initialMHCActs = jQuery.parseJSON("{{mhc_activitie_ids|safe}}");
+        $('#id_mhc_activity').empty().append('<option value="">---------</option>');
+        $('#id_org_activity').empty().append('<option value="">---------</option>');
+		fill_field(val, start_value, 'MHCActivity', 'workplan_area', 'id_mhc_activity', initialMHCActs);
+	});
+	<!-- on MHC Activity change, filter Organization Activities -->
+	$('#id_mhc_activity').change(function(){
+		var start_value = $('#id_org_activity').val();
+		var val = $(this).val();
+        var initialOrgActs = jQuery.parseJSON("{{org_activitie_ids|safe}}");
+        $('#id_org_activity').empty().append('<option value="">---------</option>');
+		fill_field(val, start_value, 'OrganizationActivity', 'mhc_activity', 'id_org_activity', initialOrgActs);
+	});
+	<!-- enable data table -->
+	$('#data-table').DataTable({
+		responsive: true,
+		paging: false,
+		info: false,
+	});
+</script>
+{% endblock %}

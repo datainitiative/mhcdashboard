@@ -1,0 +1,256 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Output Export Builder| MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style type="text/css" media="all">
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+} 
+
+.x.axis path {  display: none; }
+.legend{
+	margin-left: 10px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+.liquidFillGaugeText{
+	font-family: Helvetica;
+	font-weight: bold;
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+.panel-highlight{
+	background-color: #fff !important;
+	padding: 10px 20px !important;
+	border-top: 0px solid #ddd !important;
+}
+.highlightbox{
+}
+.highlightbox p{
+    font-family: Calibri;
+	font-size: 18px;
+    font-style: italic;
+	font-weight: bold;
+	color: #dd7636; /*rgb(138,192,7);rgb(240,173,78);#dd7636*/
+}
+</style>
+<style type="text/css" media="screen">
+.row-LFG{
+	margin-bottom: 20px;
+}
+.svg-LFG{
+	display:inline-block;
+	margin-top: 20px;
+}
+.btn-print{
+	margin-top: -7px;
+}
+.btn-pdf{
+	margin-left: 10px;
+	margin-top: -7px;
+}
+</style>
+<style type="text/css" media="print">
+svg{
+	transform: scale(0.9);
+}
+#topnavbar{
+	display: none;
+}
+#breadcrumbs{
+	display: none;
+}
+.row-LFG{
+	margin-bottom: 0px;
+}
+.svg-LFG{
+	display:inline-block;
+	margin-top: 0px;
+}
+div.panel-report{
+	border-width: 0px;
+}
+div.panel-wpd .panel-heading{
+	border-width: 0px;
+}
+div.panel-wpd{
+	border-width: 0px;
+	border-bottom-width: 1px;
+}
+div.panel-highlight{
+	page-break-after: always;
+}
+div.panel-wpd-end{
+	page-break-after: avoid;
+}
+.highlightbox p{
+	color: #dd7636 !important;
+}
+#btn-print{
+	display: none;
+}
+#btn-pdf{
+	display: none;
+}
+.col-xs-3,.col-xs-6,.col-xs-9, col-xs-12{
+	padding: 15px !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+<li>Output Report</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<div class="row">
+		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<div class="panel panel-primary panel-report">
+				<div class="panel-heading">
+					Report - Summary of Outputs in all closed reporting quarters (2015: {{closed_reporting_quarters}})
+					<button id="btn-pdf" class="btn btn-warning pull-right btn-pdf"><i class="fa fa-file-pdf-o"></i> Save PDF</button>
+					<!-- Print Button
+					<button id="btn-print" class="btn btn-warning pull-right btn-print"><i class="fa fa-print"></i> Print</button>
+					-->
+					<input id="url-createpdf" type="hidden" value="{% setting 'ROOT_APP_URL' %}/output/report/customreport/pdf/"></input>
+				</div>
+				<div id="report-container" class="panel-body"></div>
+				<div class="panel-footer">
+					<p>* No outputs were designated to be reported in current quarter.</p>
+				</div>
+			</div>
+			<div id="hidden-img-div"></div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block bottomjs %}
+	<script src='{% static "jquery.cookie/jquery.cookie.js" %}'></script>
+	<script src='{% static "d3-3.5.5/d3.min.js" %}'></script>
+	<script src='{% static "liquidFillGauge/liquidFillGauge.js" %}'></script>
+	<script src='{% static "customdashboard/barandpiechart/outputreport/barpiechart_report.js"%}'></script>
+	<script src='{% static "bullet/bullet.js" %}'></script>
+	<script>
+		function createPDF(){
+			var csrftoken = $.cookie('csrftoken');
+			var url=$("#url-createpdf").val();
+			var form_content = 
+				'<form id="hidden-post-form" action="'+url+'" method="POST">'+
+					'<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'">'+
+					'<input type="hidden" name="TEXT-A" value="'+$("#mytxt-A").html()+'">'+
+					'<input type="hidden" name="TEXT-B" value="'+$("#mytxt-B").html()+'">'+
+					'<input type="hidden" name="TEXT-C" value="'+$("#mytxt-C").html()+'">'+
+					'<input type="hidden" name="TEXT-D" value="'+$("#mytxt-D").html()+'">'+
+					'<input type="hidden" name="TEXT-E" value="'+$("#mytxt-E").html()+'">';
+			
+			var allSVGs = $(".svg-LFG");
+			$.each(allSVGs,function(index,s){
+				var wpa = s.id.replace("svgLFG-","");
+				var wpa_url = new XMLSerializer().serializeToString($("#svgLFG-"+wpa)[0]);
+				var wpa_imgsrc = "data:image/svg+xml;base64,"+btoa(wpa_url);
+				$("#hidden-img-div").append('<canvas id="canvas-'+wpa+'" width="80" height="80" style="display:none">');
+				$("#canvas-"+wpa).append('<img src='+wpa_imgsrc+'>');
+				var wpa_canvas = $("#canvas-"+wpa)[0];
+				var wpa_context = wpa_canvas.getContext("2d");
+				wpa_context.fillStyle = "#FFFFFF";
+				wpa_context.fillRect(0,0,80,80);
+				var wpa_img = new Image;
+				wpa_img.src = wpa_imgsrc;
+				wpa_context.drawImage(wpa_img,0,0);
+				var wpa_canvas_data = wpa_canvas.toDataURL("image/png");
+				var wpa_code = wpa_canvas_data.split("base64,")[1];
+				form_content = form_content + '<input type="hidden" name="'+wpa+'" value="'+wpa_code+'">';
+			});
+			form_content = form_content + '</form>';
+			var form = $(""+form_content);
+			console.log(form);
+			form.appendTo('body').submit();
+		}
+		
+		$( document ).ready(function() {
+			var barAndPieChartData = jQuery.parseJSON('{{barpiechart_data|safe}}');
+			var wpds = jQuery.parseJSON('{{workplan_directions|safe}}');
+			var highlightText = jQuery.parseJSON('{{highlight_text|safe}}');
+			var pie_dim = [200,200]
+			var gauge_dim = [80,80];
+			$.each(wpds,function(index,wpd){
+				var wpd_panel = $("#report-container").append(
+				'<div id="panel-wpd-'+index+'" class="panel panel-default panel-wpd">'+
+					'<div class="panel-heading"><strong>Work Plan Direction '+wpd.str_id+': '+wpd.description+'</strong></div>'+
+					'<div class="panel-body">'+
+						'<div id="pie-'+wpd.str_id+'" class="col-xs-4 col-sm-3 col-md-3 col-lg-3"></div>'+
+						'<div id="gauge-'+wpd.str_id+'" class="col-xs-8 col-sm-9 col-md-9 col-lg-9"></div>'+
+						'<div id="bullet-'+wpd.str_id+'" class="col-xs-8 col-sm-9 col-md-9 col-lg-9 bullet-container"></div>'+
+					'</div>'+
+					'<div class="panel-footer panel-highlight">'+
+						'<div id="wpd-highlight-txt-'+wpd.str_id+'" class="highlightbox">'+
+						'</div>'+
+					'</div>'+
+				'</div>');
+				dashboard("#pie-"+wpd.str_id,'#gauge-'+wpd.str_id,barAndPieChartData[index],pie_dim,gauge_dim);
+			});
+			$.each(highlightText,function(index,txt){
+				var wpd = Object.keys(txt)[0];
+				var wpd_panel_hightlight = $("#wpd-highlight-txt-"+wpd).append(
+					'<p class="text-warning" id="mytxt-'+wpd+'">'+txt[wpd]+'</p>'
+                );
+			});
+			$("#panel-wpd-"+(wpds.length-1).toString()).addClass("panel-wpd-end");
+			$("#btn-print").click(function(){
+				window.print();
+			});
+			$("#btn-pdf").click(function(){
+				createPDF();
+			});
+		});
+	</script>
+{% endblock %}

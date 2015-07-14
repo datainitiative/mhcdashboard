@@ -1,0 +1,153 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static bootstrapped_goodies_tags %}
+{% load custom_filter %}{% load custom_tag %}
+{% block title %}Output Export Builder| MHC Dashboard{% endblock %}
+{% block extrastyle %}
+<style>
+path {  stroke: #fff; }
+path:hover {  opacity:0.9; }
+rect:hover {  opacity:0.8; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+	margin-left: 50px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+blockquote{
+	padding: 0px 40px !important;
+	border-color: #f0ad4e !important;
+}
+</style>
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block breadcrumbs %}
+<ul class='breadcrumb'>
+<li><a href="{% setting 'ROOT_APP_URL' %}/home/">{% trans 'Home' %}</a></li>
+{% if user|has_group:"Superuser" %}
+<li><a href="{% url 'admin:index' %}">{% trans 'Superuser Admin Home' %}</a></li>
+{% endif %}
+{% if user|has_group:"MHC Admin" %}
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/">Admin</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
+{% endif %}
+<li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li>
+{% if user|has_group:"Non-profit Staff" %}
+	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
+{% else %}
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+{% endif %}
+  Output</a>
+</li>
+<li>Output Export Builder</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<div class="row">
+		<div class="col-lg-12 col-mg-12">
+			<div id="download_success_msg" class="alert alert-success alert-dismissable" style="display:none">
+				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>
+				File downloaded successfully!
+				<br/>
+			</div>
+			{% if error_msg %}
+				<div id="download_error_msg" class="alert alert-danger alert-dismissable">
+					<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>
+					{{error_msg}}
+					<br/>
+				</div>
+			{% endif %}
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					Output Export Builder
+				</div>
+				<div class="panel-body">
+					<div class="form-group">
+						<form id="form_exportcsv" action="{% setting 'ROOT_APP_URL' %}/output/report/exportcsv/" method="GET">
+							<div class="well">
+								<label>Export by Organization&nbsp;&nbsp;</label>
+								<select id="OrgID" class="form-control">
+									<option value=0>------ All Organizations ------</option>
+									{% for org in organizations %}
+										<option value={{org.id}}>{{org.name}}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div class="well">
+								<label>Export by Work Plan Direction&nbsp;&nbsp;</label>
+								<select id="WPDID" class="form-control">
+									<option value=0>------ All Work Plan Directions ------</option>
+									{% for wpd in wpdirections %}
+										<option value={{wpd.id}}>{{wpd.description}}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<button type="submit" class="btn btn-success"><i class="fa fa-download"></i> Download</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block bottomjs %}
+	<script src='{% static "jquery.fileDownload/jquery.fileDownload.js"%}'></script>
+	<script>
+		var submit_url_root = $("#form_exportcsv").prop("action");
+		function change_action_url(){
+			var submit_url = submit_url_root + $("#OrgID").val() + "/" + $("#WPDID").val() + "/";
+		$("#form_exportcsv").prop("action",submit_url);
+		}
+		change_action_url();
+		$("#OrgID").change(function(){
+			change_action_url();
+		});
+		$("#WPDID").change(function(){
+			change_action_url();
+		});
+		if ('{{download_file}}' !== "None"){
+			$.fileDownload('{{download_file}}', {
+				successCallback: function (url) {
+					if ($("#download_success_msg").css('display')=='none')
+					{$("#download_success_msg").show();}
+				},
+				failCallback: function (html, url) {
+					alert('Your file download just failed for this URL:' + url + '\r\n' +
+							'Here was the resulting error HTML: \r\n' + html
+							);
+				}
+			});
+		}
+	</script>
+{% endblock %}

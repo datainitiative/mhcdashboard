@@ -1,0 +1,44 @@
+{% extends "admin/admin_base_site_"|add:appname|add:".html" %}
+{% load adminmedia %}{% load i18n admin_static admin_modify %}{% load url from future %}{% load admin_urls %}{% load smart_if %}{% load custom_tag %}
+
+{% block current_title %}Sign up{% endblock %}
+
+{% block breadcrumbs %}
+		&rsaquo; Sign up
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+	<form id="user_form" method="post" action="">{% csrf_token %}
+		<fieldset class="module aligned">
+			<div class="form-row field-username">
+				<p>{{signup_form.username.errors}}</p>
+				<label for="id_old_password" class="required">{{signup_form.username.label}}:</label>
+				{{signup_form.username}}
+				<p class="help">{{signup_form.username.help_text}}</p>
+			</div>
+			<div class="form-row field-password1">
+				<p>{{signup_form.password1.errors}}</p>
+				<label for="id_password1" class="required">{{signup_form.password1.label}}:</label>
+				{{signup_form.password1}}
+				<p class="help">{{signup_form.password1.help_text}}</p>
+			</div>
+			<div class="form-row field-password2">
+				<p>{{signup_form.password2.errors}}</p>
+				<label for="id_password2" class="required">{{signup_form.password2.label}}:</label>
+				{{signup_form.password2}}
+				<p class="help">{{signup_form.password2.help_text}}</p>
+			</div>
+		</fieldset>
+		<div class="form-submit-buttons">
+			<p>
+				<input type="submit" name="save" id="save-button" value="Register">
+			</p>
+		</div>
+	</form>
+</div>
+{% endblock %}
+
+{% block bottom_javascript %}
+	<script type="text/javascript">document.getElementById("id_username").focus();</script>
+{% endblock %}
