@@ -1502,6 +1502,7 @@ Export CSV
 @login_required
 @render_to("mhcdashboardapp/output_report_exportcsv.html")
 def output_exportbuilder(request):
+    reportingquarters = ActiveQuarter.objects.all()
     organizations = []
     orgs = Organization.objects.all()
     # get only organizations that have outputs
@@ -1517,13 +1518,25 @@ def output_exportbuilder(request):
                 org_name = Organization.objects.get(id=int(request.GET["org"])).name
                 if "wpd" in request.GET and request.GET["wpd"] != "":
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
-                    error_msg = "Organization %s has no outputs in work plan direction %s." % (org_name,wpd_description)
+                    if "q" in request.GET and request.GET["q"] != "":
+                        q = request.GET["q"]
+                        error_msg = "Organization %s has no outputs in work plan direction %s in 2015 Quarter %s." % (org_name,wpd_description,q)
+                    else:
+                        error_msg = "Organization %s has no outputs in work plan direction %s." % (org_name,wpd_description)
                 else:
                     error_msg = "There is no outputs for organization %s." % org_name
             else:
                 if "wpd" in request.GET and request.GET["wpd"] != "":
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
-                    error_msg = "There is no outputs in work plan direction %s." % wpd_description
+                    if "q" in request.GET and request.GET["q"] != "":
+                        q = request.GET["q"]
+                        error_msg = "There is no outputs in work plan direction %s in 2015 Quarter %s." % (wpd_description,q)
+                    else:                    
+                        error_msg = "There is no outputs in work plan direction %s." % wpd_description
+                else:
+                    if "q" in request.GET and request.GET["q"] != "":
+                        q = request.GET["q"]
+                        error_msg = "There is no outputs in 2015 Quarter %s." % q
         elif "file" in request.GET and request.GET["file"] != "":
             download_file = request.GET["file"]
     return {
@@ -1531,6 +1544,7 @@ def output_exportbuilder(request):
             "download_file":download_file,
             "organizations":organizations,
             "wpdirections":wpdirections,
+            "reportingquarters":reportingquarters,
             }
 
 class Echo(object):
@@ -1542,7 +1556,7 @@ class Echo(object):
         return value
 
 # Export Output as CSV file
-def exportcsv_output(request,org_id,wpd_id):
+def exportcsv_output(request,org_id,wpd_id,q_id):
     # get all outputs
     outputs = Output.objects.all()
     redirect_url = ""
@@ -1551,11 +1565,23 @@ def exportcsv_output(request,org_id,wpd_id):
         outputs = outputs.filter(orgnization_activity__organization__id=org_id)
         if wpd_id and int(wpd_id) > 0:
             outputs = outputs.filter(orgnization_activity__workplan_area__workplan_direction__id=wpd_id)
-            redirect_url = "%s/output/report/exportbuilder?org=%s&wpd=%s" % (ROOT_APP_URL,org_id,wpd_id)
+            if q_id and int(q_id) > 0:
+                outputs = outputs.filter(active_quarter__id=q_id)
+                redirect_url = "%s/output/report/exportbuilder?org=%s&wpd=%s&q=%s" % (ROOT_APP_URL,org_id,wpd_id,q_id)
+            else:
+                redirect_url = "%s/output/report/exportbuilder?org=%s&wpd=%s" % (ROOT_APP_URL,org_id,wpd_id)
     else:
         if wpd_id and int(wpd_id) > 0:
             outputs = outputs.filter(orgnization_activity__workplan_area__workplan_direction__id=wpd_id)
-            redirect_url = "%s/output/report/exportbuilder?wpd=%s" % (ROOT_APP_URL,wpd_id)
+            if q_id and int(q_id) > 0:
+                outputs = outputs.filter(active_quarter__id=q_id)
+                redirect_url = "%s/output/report/exportbuilder?wpd=%s&q=%s" % (ROOT_APP_URL,wpd_id,q_id)
+            else:
+                redirect_url = "%s/output/report/exportbuilder?wpd=%s" % (ROOT_APP_URL,wpd_id)
+        else:
+            if q_id and int(q_id) > 0:
+                outputs = outputs.filter(active_quarter__id=q_id)
+                redirect_url = "%s/output/report/exportbuilder?q=%s" % (ROOT_APP_URL,q_id)
         
     if len(outputs) > 0:
         # headers

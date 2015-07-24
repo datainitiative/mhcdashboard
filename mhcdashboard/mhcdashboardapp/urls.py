@@ -37,7 +37,7 @@ urlpatterns = patterns('mhcdashboardapp.views',
 	
 	# Export Data as CSV
 	url(r'output/report/exportbuilder$','output_exportbuilder'),
-	url(r'output/report/exportcsv/(?P<org_id>\d+)/(?P<wpd_id>\d+)/$','exportcsv_output'),
+	url(r'output/report/exportcsv/(?P<org_id>\d+)/(?P<wpd_id>\d+)/(?P<q_id>\d+)/$','exportcsv_output'),
 
 	# Import Data from CSV
 	url(r'dataimport/csv/workplan_area$','importcsv_workplan_area'),
