@@ -15,6 +15,7 @@ urlpatterns = patterns('mhcdashboardapp.views',
 	# Customized Admin Pages
 #	url(r'^output/$','output_index'),
 	url(r'^output/report/$','report_output'),
+	url(r'^output/report/temporary/(?P<qid>\d+)/$','report_output_temp'),
 	
 	# Login,Logout,Register,User
 	url(r'^logout/$',logout,{'template_name': 'registration/logged_out.html'}),

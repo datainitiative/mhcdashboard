@@ -297,6 +297,122 @@ def report_output(request):
         "save_msg":save_msg
     }
 
+@login_required
+@render_to("mhcdashboardapp/report_output_temp.html")
+def report_output_temp(request,qid):
+    error_msg = ""
+    save_msg = ""
+    login_user = MyUser.objects.get(user=request.user)
+    org_id = login_user.organization.id
+    report_q = qid
+    select_options = None
+    organization = Organization.objects.get(id=org_id)
+    workplan_areas = []
+    mhc_activities = []
+    mhc_activitie_ids = []
+    org_activities = []
+    org_activitie_ids = []
+    outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')   
+    
+    #outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+    for op in outputs_current:
+        if not (op.orgnization_activity.workplan_area in workplan_areas):
+            workplan_areas.append(op.orgnization_activity.workplan_area)
+        if not (op.orgnization_activity.mhc_activity in mhc_activities):
+            mhc_activities.append(op.orgnization_activity.mhc_activity)
+            mhc_activitie_ids.append(op.orgnization_activity.mhc_activity.id)
+        if not (op.orgnization_activity in org_activities):
+            org_activities.append(op.orgnization_activity)
+            org_activitie_ids.append(op.orgnization_activity.id)       
+    if report_q > 1:
+        outputs_previous = Output.objects.filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
+    else:
+        outputs_previous = None
+    
+    outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+    if request.method == 'POST':
+        # pre-select Workplan Area, MHC Activity, Org Activity as filters
+        if request.POST["OrgActID"]:
+            select_org_act_id = int(request.POST["OrgActID"])
+            select_org = OrganizationActivity.objects.get(id=select_org_act_id)
+            select_mhc_act_id = select_org.mhc_activity.id
+            select_wp_area_id = select_org.workplan_area.id
+            select_options = {
+                "select_org_act_id":select_org_act_id,
+                "select_mhc_act_id":select_mhc_act_id,
+                "select_wp_area_id":select_wp_area_id
+            }
+            outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity=select_org)
+        # update reported outputs
+        for op in outputs_report:
+            op_id = op.id
+            
+            op_location = request.POST.get("id_output_set-%d-location" % op_id)
+            if op_location:
+                op.location = op_location
+            
+            op_comment = request.POST.get("id_output_set-%d-comment" % op_id)
+            if op_comment:
+                op.comment = op_comment
+            else:
+                op.comment = None
+            
+            op_output_value = request.POST.get("id_output_set-%d-output_value" % op_id)
+
+            op.output_value = op_output_value
+            if (not op_output_value) or (op_output_value == "None"):
+                if op_comment and op_comment != "None":
+                    op.is_goal = -99
+                else:
+                    op.is_goal = -1
+            else:
+                if (op_output_value.strip().lower() == "yes") or (op_output_value.strip().lower() == "y"):
+                    op.is_goal = 1
+                else:
+                    if is_number(op_output_value):
+                        numbers_in_description = [n for n in op.description.split() if is_number(n)]
+                        if len(numbers_in_description) > 0:
+                            if "." in numbers_in_description[0]:
+                                goal_number = float(numbers_in_description[0])
+                            else:
+                                goal_number = int(numbers_in_description[0])
+                            if "." in op_output_value:
+                                output_value = float(op_output_value)
+                            else:
+                                output_value = int(op_output_value)
+                            if output_value >= goal_number:
+                                op.is_goal = 1
+                            else:
+                                op.is_goal = 0
+                        else:
+                            op.is_goal = -99
+                    else:
+                        op.is_goal = -99
+            try:
+                print op.is_goal
+                op.save()
+            except Exception, e:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                error_type = exc_type.__name__
+                error_info = exc_obj
+                error_msg = "%s: %s. Please try again!" % (error_type,error_info)
+        if error_msg == "":
+            outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+            save_msg = "Changes to Output have been saved!"
+    
+    return {"report_quarter":report_q,
+        "organization":organization,
+        "select_options":select_options,
+        "workplan_areas":workplan_areas,
+        "mhc_activities":mhc_activities,
+        "mhc_activitie_ids":mhc_activitie_ids,
+        "org_activities":org_activities,
+        "org_activitie_ids":org_activitie_ids,
+        "outputs_current":outputs_current,
+        "outputs_previous":outputs_previous,
+        "error_msg":error_msg,
+        "save_msg":save_msg
+    }
 
 '''-----------------------
 Output Report Page
