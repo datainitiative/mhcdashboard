@@ -470,10 +470,10 @@ class Output(models.Model):
                             self.is_goal = 1
                         else:
                             self.is_goal = 0
-                    else:
-                        self.is_goal = -99
-                else:
-                    self.is_goal = -99
+#                    else:
+#                        self.is_goal = -99
+#                else:
+#                    self.is_goal = -99
         
             
         # update organization activity by summarizing output comments
