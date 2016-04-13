@@ -1820,7 +1820,7 @@ def importcsv_organization(request):
 # Import MHC Activity
 def importcsv_mhc_activity(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"mhc_activity.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"mhc_activity_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 workplan_area_strid = row[0].replace(" ","")[:2]
