@@ -1786,12 +1786,13 @@ MHC_DASHBOARD_DATA_PATH = "C:/QLiu/MileHighConnectsApp/Data/csv/" # use this for
 # Import Workplan Area
 def importcsv_workplan_area(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"workplan_area.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"workplan_area_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 workplan_area = WorkplanArea(
-                    str_id=row[0].replace(" ",""),
-                    description=row[1].strip(),
+                    str_id = row[0].replace(" ",""),
+                    description = row[1].strip(),
+                    workplan_direction = WorkplanDirection.objects.get(str_id=row[2].strip())
                 )
                 workplan_area.save()
         return HttpResponse("Workplan Area - Import complete!")

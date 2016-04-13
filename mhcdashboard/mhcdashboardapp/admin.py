@@ -57,11 +57,11 @@ class WorkplanAreaAdmin(admin.ModelAdmin):
 #        (None, {'fields':['str_id']}),
 #        ('More Information', {'fields':['description'],'classes':['collapse']}),
 #    ]
-    fields = ['str_id','description','workplan_direction']
+    fields = ['str_id','description','workplan_direction','year']
     inlines = [MHCActivityInline]
-    list_display = ('str_id','description','workplan_direction')
-    search_fields = ['str_id','description']
-    list_filter = ['workplan_direction']
+    list_display = ('str_id','description','workplan_direction','year')
+    search_fields = ['str_id','description','year']
+    list_filter = ['workplan_direction','year']
     list_per_page = LIST_PER_PAGE
     save_on_top = True
 admin.site.register(WorkplanArea,WorkplanAreaAdmin)
