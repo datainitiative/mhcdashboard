@@ -271,7 +271,6 @@ def report_output(request):
                     else:
                         op.is_goal = -99
             try:
-                print op.is_goal
                 op.save()
             except Exception, e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -388,7 +387,6 @@ def report_output_temp(request,qid):
                     else:
                         op.is_goal = -99
             try:
-                print op.is_goal
                 op.save()
             except Exception, e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -1870,7 +1868,6 @@ def importcsv_output(request):
             for row in reader:
                 str_ids = row[0].replace(" ","").split('.')
                 workplan_area_str_id = str_ids[0]
-                print str_ids
                 mhc_activity_str_id = "%s.%s" % (str_ids[0],str_ids[1])
                 org_activity_str_id_int = ord(str_ids[-1][-1])-96
                 org_activity_str_id = "%s.%d" % (mhc_activity_str_id,org_activity_str_id_int)
