@@ -1792,7 +1792,8 @@ def importcsv_workplan_area(request):
                 workplan_area = WorkplanArea(
                     str_id = row[0].replace(" ",""),
                     description = row[1].strip(),
-                    workplan_direction = WorkplanDirection.objects.get(str_id=row[2].strip())
+                    workplan_direction = WorkplanDirection.objects.get(str_id=row[2].strip()),
+                    year = datetime.datetime.now().year
                 )
                 workplan_area.save()
         return HttpResponse("Workplan Area - Import complete!")
@@ -1826,8 +1827,9 @@ def importcsv_mhc_activity(request):
                 workplan_area_strid = row[0].replace(" ","")[:2]
                 mhc_activity = MHCActivity(
                     str_id=row[0].replace(" ",""),
-                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_strid) if workplan_area_strid != "" else None,
-                    description=row[1].strip()
+                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_strid,year=datetime.datetime.now().year) if workplan_area_strid != "" else None,
+                    description=row[1].strip(),
+                    year = datetime.datetime.now().year
                 )
                 mhc_activity.save()
         return HttpResponse("MHC Activity - Import complete!")
@@ -1838,7 +1840,7 @@ def importcsv_mhc_activity(request):
 # Import Organization Activity
 def importcsv_org_activity(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"organization_activity.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"organization_activity_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 str_ids = row[1].replace(" ","").split('.')
@@ -1848,11 +1850,12 @@ def importcsv_org_activity(request):
                 str_id = "%s.%d" % (mhc_activity_str_id,str_id_int)
                 org_activity = OrganizationActivity(
 #                    str_id=str_id,
-                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_str_id) if workplan_area_str_id != "" else None,
-                    mhc_activity=MHCActivity.objects.get(str_id=mhc_activity_str_id) if mhc_activity_str_id != "" else None,
+                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_str_id,year=datetime.datetime.now().year) if workplan_area_str_id != "" else None,
+                    mhc_activity=MHCActivity.objects.get(str_id=mhc_activity_str_id,year=datetime.datetime.now().year) if mhc_activity_str_id != "" else None,
                     organization=Organization.objects.get(abbreviation=row[0].strip()) if row[0] != "" else None,
                     description=row[2].strip(),
-                    origin_strid=row[1].replace(" ","")
+                    origin_strid=row[1].replace(" ",""),
+                    year = datetime.datetime.now().year
                 )
                 org_activity.save()
         return HttpResponse("Organization Activity - Import complete!")
@@ -1863,19 +1866,20 @@ def importcsv_org_activity(request):
 # Import Output
 def importcsv_output(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"output.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"output_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 str_ids = row[0].replace(" ","").split('.')
                 workplan_area_str_id = str_ids[0]
+                print str_ids
                 mhc_activity_str_id = "%s.%s" % (str_ids[0],str_ids[1])
                 org_activity_str_id_int = ord(str_ids[-1][-1])-96
                 org_activity_str_id = "%s.%d" % (mhc_activity_str_id,org_activity_str_id_int)
                 output = Output(
-                    orgnization_activity=OrganizationActivity.objects.get(origin_strid=row[0].replace(" ","")) if row[0] != "" else None,
+                    orgnization_activity=OrganizationActivity.objects.get(origin_strid=row[0].replace(" ",""),year=datetime.datetime.now().year) if row[0] != "" else None,
                     active_quarter=ActiveQuarter.objects.get(quarter=int(row[1].replace(" ",""))) if row[1] != "" else None,
                     description=row[2].strip().replace(",",""),
-                    output_value=row[3].strip().replace(",",""),
+                    #output_value=row[3].strip().replace(",",""),
                 )
                 output.save()
         return HttpResponse("Output - Import complete!")
