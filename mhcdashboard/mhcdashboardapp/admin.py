@@ -77,7 +77,7 @@ class MHCActivityAdmin(admin.ModelAdmin):
     inlines = [OrganizationActivityInline]
     readonly_fields = ('str_id',)
     list_display = ('str_id','description','workplan_area')
-    list_filter = ['workplan_area']
+    list_filter = ['workplan_area','year']
     search_fields = ['str_id','description']
     list_per_page = LIST_PER_PAGE
 admin.site.register(MHCActivity,MHCActivityAdmin)
@@ -108,7 +108,7 @@ class OrganizationActivityAdmin(admin.ModelAdmin):
     readonly_fields = ('str_id','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments')
     list_display = ('str_id','workplan_area','mhc_activity','organization','description')
     search_fields = ['str_id','description']
-    list_filter = ['workplan_area','mhc_activity','organization']
+    list_filter = ['workplan_area','mhc_activity','organization','year']
     list_per_page = LIST_PER_PAGE
 admin.site.register(OrganizationActivity,OrganizationActivityAdmin)
 
@@ -129,6 +129,6 @@ class OutputAdmin(admin.ModelAdmin):
     fields = ['orgnization_activity','active_quarter','description','location','is_goal','output_value','comment']
     list_display = ('orgnization_activity','active_quarter','description','location','is_goal','output_value')
     search_fields = ['description']
-    list_filter = ['orgnization_activity__organization','orgnization_activity','active_quarter','is_goal']
+    list_filter = ['orgnization_activity__organization','orgnization_activity','active_quarter','is_goal','orgnization_activity__year']
     list_per_page = LIST_PER_PAGE
 admin.site.register(Output,OutputAdmin)
