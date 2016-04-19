@@ -292,6 +292,7 @@ def report_output(request):
         "org_activitie_ids":org_activitie_ids,
         "outputs_current":outputs_current,
         "outputs_previous":outputs_previous,
+        "current_year":datetime.datetime.now().year,
         "error_msg":error_msg,
         "save_msg":save_msg
     }
