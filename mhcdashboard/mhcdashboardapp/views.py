@@ -146,7 +146,7 @@ def home(request):
         if value > 0:
             piechart_data.append({
                 "label": key,
-                "data": float(value)/workplanarea_num_orgact[key]
+                "data": float(value)/workplanarea_num_orgact[key] if workplanarea_num_orgact[key] != 0 else 0
             })
     piechart_data_json = json.dumps(piechart_data)
     return {"num_workplanarea":len(workplanareas),
