@@ -64,17 +64,17 @@ Home Page
 @login_required
 @render_to("mhcdashboardapp/home.html")
 def home(request):
-    workplanareas = WorkplanArea.objects.all()
-    mhcactivities = MHCActivity.objects.all()
-    orgactivities = OrganizationActivity.objects.all()
+    workplanareas = WorkplanArea.objects.filter(year=datetime.datetime.now().year)
+    mhcactivities = MHCActivity.objects.filter(year=datetime.datetime.now().year)
+    orgactivities = OrganizationActivity.objects.filter(year=datetime.datetime.now().year)
     organizations = []
     orgs = Organization.objects.all()
     for org in orgs:
         if org._get_activity_quarters() != "No active quarters reporting on":
             organizations.append(org)
     indicators = Indicator.objects.all()
-    outputs = Output.objects.all()
-    outputs_goal_no = Output.objects.filter(is_goal=0)
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
+    outputs_goal_no = Output.objects.filter(is_goal=0,orgnization_activity__year=datetime.datetime.now().year)
     org_qt_summary_all = []
     org_qt_summary_goal = []
     org_pf_summary = []
@@ -92,7 +92,7 @@ def home(request):
         tmp_org_pf_summary_q2 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
         tmp_org_pf_summary_q3 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
         tmp_org_pf_summary_q4 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
-        org_outputs = Output.objects.filter(orgnization_activity__organization=tmp_org)
+        org_outputs = Output.objects.filter(orgnization_activity__organization=tmp_org,orgnization_activity__year=datetime.datetime.now().year)
         for org_output in org_outputs:
             if org_output.active_quarter is not None:
                 tmp_org_qt_summary_all["quarter"]["Q%d" % org_output.active_quarter.quarter] += 1
@@ -127,7 +127,7 @@ def home(request):
     workplanarea_num_orgact = {}
     for wpa in workplanareas:
         workplanarea_goals[wpa.str_id] = 0
-        workplanarea_num_orgact[wpa.str_id] = len(OrganizationActivity.objects.filter(workplan_area=wpa.id))
+        workplanarea_num_orgact[wpa.str_id] = len(OrganizationActivity.objects.filter(workplan_area=wpa.id,year=datetime.datetime.now().year))
     orgact_summary = []
     for orgact in orgactivities:
         outputs_num = len(Output.objects.filter(orgnization_activity=orgact.id))
