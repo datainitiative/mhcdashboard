@@ -502,14 +502,14 @@ def output_reportpage_builder(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -517,7 +517,7 @@ def output_reportpage_builder(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -589,14 +589,14 @@ def output_customreport(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -604,7 +604,7 @@ def output_customreport(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -637,14 +637,14 @@ def output_customreport_2(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -652,7 +652,7 @@ def output_customreport_2(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -677,7 +677,7 @@ def output_customreport_2(request):
 
 # Export report as PDF
 @login_required
-def output_customreport_pdf(request):
+def output_customreport_pdf_2015(request):
     # Prepare data
     previous_report_quarter = report_quarter() - 1
     closed_reporting_quarters = "Quarter 1"
@@ -685,19 +685,19 @@ def output_customreport_pdf(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", %d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         tmp_wpd_pf_summary = {"total":0,"Yes":0,"No":0,"NotReported":0,"TBD":0}
         wpa_list = []
         for wpa in workplan_areas:
             wpa_list.append({wpa.str_id:wpa.description})
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 tmp_wpd_pf_summary["total"] += 1
                 if wpa_output.is_goal is not None:
@@ -1370,7 +1370,7 @@ def output_customreport_pdf(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,410)
+    p.translate(180,380)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
@@ -1383,13 +1383,13 @@ def output_customreport_pdf(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,385-h-h/10)    
+    parag.drawOn(p,245,355-h-h/10)    
     ###### WPA D2
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,410)
+    p.translate(380,380)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
     # restore previous canvas settings
@@ -1403,7 +1403,7 @@ def output_customreport_pdf(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,450,385-h-h/10)
+    parag.drawOn(p,450,355-h-h/10)
     
     
     ##### Narratives
@@ -1560,6 +1560,957 @@ def output_customreport_pdf(request):
     ####### Water Bubble
     p.saveState()
     p.translate(380,620)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E4"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E4: Operational systems and policies"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,665-h-h/10)
+
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-E"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 720
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    #### Page footer
+    p.setFillColor(HexColor("#777777"))
+    p.rect(35,750,540,0.5,stroke=0,fill=1)    
+    p.setFont("Helvetica",8)
+    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.setFont("Helvetica",9)    
+    p.drawString(520,763,"Page 2 of 2")    
+
+    ## Print Page 2
+    p.showPage()
+    
+    # Save Canvas
+    p.save()
+
+    return response
+
+@login_required
+def output_customreport_pdf_2016(request):
+    # Prepare data
+    previous_report_quarter = report_quarter() - 1
+    closed_reporting_quarters = "Quarter 1"
+    if previous_report_quarter < 1:
+        previous_report_quarter =  1
+    else:
+        closed_reporting_quarters += "".join((", %d" % q for q in range(2,previous_report_quarter+1)))
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
+    outputs_summary = []
+    workplan_directions = WorkplanDirection.objects.all()
+    wpds = []
+    goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
+    for wpd in workplan_directions:
+        wpds.append({"str_id":wpd.str_id,"description":wpd.description})
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
+        tmp_wpd_pf_summary = {"total":0,"Yes":0,"No":0,"NotReported":0,"TBD":0}
+        wpa_list = []
+        for wpa in workplan_areas:
+            wpa_list.append({wpa.str_id:wpa.description})
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            for wpa_output in wpa_outputs:
+                tmp_wpd_pf_summary["total"] += 1
+                if wpa_output.is_goal is not None:
+                    tmp_wpd_pf_summary[goal_choices[wpa_output.is_goal]] += 1
+        outputs_summary.append({"name":"%s: %s"% (wpd.str_id,wpd.description),"wpa":wpa_list,"perform":tmp_wpd_pf_summary})
+    
+    # Generate PDF report
+    ## Prepare HttpResponse for downloading PDF file
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"]="attachment; filename=\"report_%s.pdf\"" % datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    ## PDF canvas config
+    p_pagesize = letter # use letter as PDF page size
+    p_isbottomup = 0 # place the origin (0,0) at the top left
+    p_margin = 0.4 * inch # set page margin to 0.4 inch
+    p_pagewidth = defaultPageSize[0]
+    p_pageheight = defaultPageSize[1]
+    styles = getSampleStyleSheet()
+    p_width, p_height = p_pagesize # get width and height of pagesize
+    
+    ## Initiate pdf canvas
+    p = canvas.Canvas(response,pagesize=p_pagesize,bottomup=p_isbottomup)
+    
+    # set page margin by moving origin point to the top left margin point
+#    p.translate(p_margin,p_margin)
+    
+    ## Page 1
+    ### Report Title
+    p_title = "Report Summary"
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(40,60)
+    txtobj.setFont("Helvetica-BoldOblique",20)
+    txtobj.textLine(p_title)
+    p.setFillColor(HexColor("#08426A"))
+    p.drawText(txtobj)
+    #### Report Sub-title
+    p_title = "Outputs in 2015 %s" % closed_reporting_quarters
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(140,100)
+    txtobj.setFont("Helvetica-BoldOblique",18)
+    txtobj.textLine(p_title)
+    p.setFillColor(HexColor("#08426A"))
+    p.drawText(txtobj)
+    p.rect(30,120,552,3,stroke=0,fill=1)
+    #### MHC logo
+    p.saveState()
+    p.translate(430,115)
+    p.scale(1,-1)
+    mhc_logoimg_path = SOTRAGE_ROOTPATH.replace("data","img") + "mhc_logo.png"
+    p.drawImage(mhc_logoimg_path,0,0,130,90,mask='auto')
+    p.restoreState()
+    
+    ### WPD A
+    #### WPD A heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[0]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,160)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD A body
+    
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[0]["perform"]["Yes"],outputs_summary[0]["perform"]["No"],outputs_summary[0]["perform"]["NotReported"],outputs_summary[0]["perform"]["TBD"]]
+#    pc.labels = ["Yes","Not Reported"] # pie chart label
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+#    #popout pie slice
+#    pc.slices[0].popout = 10
+#    pc.slices[0].labelRadius = 1.75
+#    r,g,b = rgb_to_scale(221,118,54)
+#    pc.slices[0].fontColor = Color(r,g,b,1)
+    d.add(pc)
+    renderPDF.draw(d,p,40,195)
+    
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,295,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,299,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,306,"Yes")
+    p.drawString(110,306,str(outputs_summary[0]["perform"]["Yes"]))
+    p.drawString(135,306,"%d%%" % round(outputs_summary[0]["perform"]["Yes"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,310,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,314,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,321,"No")
+    p.drawString(110,321,str(outputs_summary[0]["perform"]["No"]))
+    p.drawString(135,321,"%d%%" % round(outputs_summary[0]["perform"]["No"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
+    ###### Row 3 "Not Report"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,325,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,329,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,336,"Not Report")
+    p.drawString(110,336,str(outputs_summary[0]["perform"]["NotReported"]))
+    p.drawString(135,336,"%d%%" % round(outputs_summary[0]["perform"]["NotReported"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,340,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,344,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,351,"TBD")
+    p.drawString(110,351,str(outputs_summary[0]["perform"]["TBD"]))
+    p.drawString(135,351,"%d%%" % round(outputs_summary[0]["perform"]["TBD"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,355,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    
+    ###### WPA A1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    # temporarily change the canvas by changing origin point and change scale to flip the image
+    p.saveState()
+    p.translate(180,260)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()# restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A1: Preservation of affordable housing and critical community facilities near transit"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,235-h-h/10)  
+    ###### WPA A2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,260)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A2: Development of new affordable housing and community facilities near transit"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,235-h-h/10)    
+    ###### WPA A3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,340)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A3: Increase and Align Financial Resources for Affordable Housing and Community Facilities"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,255,305-h-h/10)
+#    ###### WPA A4
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(380,320)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A4"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState()# restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "A4: Supporting Policy Environment: Promote Adoption of Equitable Regional Housing Strategy"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,445,295-h-h/10)
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-A"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 392
+    if h == 12: # one row text
+        parag_y += 0
+    elif h == 24: # two rows
+        parag_y -= 15
+    elif h == 36: # three rows
+        parag_y -= 35  
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,430,530,1.5,stroke=0,fill=1)    
+    
+    ### WPD B
+    
+    #### WPD B heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[1]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,470)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD B body
+    
+    #### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[1]["perform"]["Yes"],outputs_summary[1]["perform"]["No"],outputs_summary[1]["perform"]["NotReported"],outputs_summary[1]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,505)
+    
+    #### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,605,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,609,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,616,"Yes")
+    p.drawString(110,616,str(outputs_summary[1]["perform"]["Yes"]))
+    p.drawString(135,616,"%d%%" % round(outputs_summary[1]["perform"]["Yes"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,620,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,624,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,631,"No")
+    p.drawString(110,631,str(outputs_summary[1]["perform"]["No"]))
+    p.drawString(135,631,"%d%%" % round(outputs_summary[1]["perform"]["No"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
+    ###### Row 3 "Not Report"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,635,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,639,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,646,"Not Report")
+    p.drawString(110,646,str(outputs_summary[1]["perform"]["NotReported"]))
+    p.drawString(135,646,"%d%%" % round(outputs_summary[1]["perform"]["NotReported"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,650,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,654,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,661,"TBD")
+    p.drawString(110,661,str(outputs_summary[1]["perform"]["TBD"]))
+    p.drawString(135,661,"%d%%" % round(outputs_summary[1]["perform"]["TBD"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,665,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA B1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,570)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "B1: Sun Valley Pilot: Connecting residents to good jobs in a redeveloping transit area"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,545-h-h/10)
+    ###### WPA B2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,570)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "B2: Park Hill Village West Project: Connecting residents to good jobs in a newly developing transit area"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,545-h-h/10)    
+    ###### WPA B3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,650)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+   ####### Paragraph
+    p_wpa = "B3: Anschutz Campus Project: Connecting residents to good jobs via anchor institution"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,625-h-h/10)
+    ###### WPA B4
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,650)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B4"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+   ####### Paragraph
+    p_wpa = "B4: Supporting Policy Environment: Equitable Regional Economic Strategy"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,625-h-h/10)
+#    ###### WPA B5
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(180,650)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B5"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState() # restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "B5: Supporting Policy Environment: Incentivize Businesses Providing Good Jobs to Locate Near Transit"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,245,625-h-h/10)
+#    ###### WPA B6
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(380,650)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B6"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState() # restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "B6: Increase and Align Financial Resources for Commercial Facilities and Tenants Near Transit"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,445,625-h-h/10)
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-B"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 700
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    #### Page footer
+    p.setFillColor(HexColor("#777777"))
+    p.rect(35,750,540,0.5,stroke=0,fill=1)
+    p.setFont("Helvetica",8)
+    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.setFont("Helvetica",9)
+    p.drawString(520,763,"Page 1 of 2")
+    
+    ## Print Page 1
+    p.showPage()
+    
+    ## Page 2
+    
+    ### WPD C
+    #### WPD C heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[2]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,60)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD C body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[2]["perform"]["Yes"],outputs_summary[2]["perform"]["No"],outputs_summary[2]["perform"]["NotReported"],outputs_summary[2]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,65)
+    
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,165,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,169,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,176,"Yes")
+    p.drawString(110,176,str(outputs_summary[2]["perform"]["Yes"]))
+    p.drawString(135,176,"%d%%" % round(outputs_summary[2]["perform"]["Yes"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,180,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,184,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,191,"No")
+    p.drawString(110,191,str(outputs_summary[2]["perform"]["No"]))
+    p.drawString(135,191,"%d%%" % round(outputs_summary[2]["perform"]["No"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
+    ###### Row 3 "Not Report"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,195,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,199,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,206,"Not Report")
+    p.drawString(110,206,str(outputs_summary[2]["perform"]["NotReported"]))
+    p.drawString(135,206,"%d%%" % round(outputs_summary[2]["perform"]["NotReported"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,210,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,214,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,221,"TBD")
+    p.drawString(110,221,str(outputs_summary[2]["perform"]["TBD"]))
+    p.drawString(135,221,"%d%%" % round(outputs_summary[2]["perform"]["TBD"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,225,120,0.5,stroke=0,fill=1)
+    
+    #### WPA
+    ###### WPA C1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,150)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph   
+    p_wpa = "C1: Affordable Bus and Light Rail Fares for Low-Income Riders and Commuters"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,125-h-h/10)    
+    ###### WPA C2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,150)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "C2: Affordable Bus and Light Rail Fares for Students: My Denver Card"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,125-h-h/10)    
+#    ###### WPA C3
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(180,210)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C3"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState()
+#    ####### Paragraph
+#    p_wpa = "C3: Ensuring Accessible Bus Service Routes for Low-Income Communities"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,245,185-h-h/10)
+    
+    #### Narratives
+    p_wpd_narratives = request.POST["TEXT-C"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 240
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,270,530,1.5,stroke=0,fill=1)    
+    
+    ### WPD D
+    #### WPD D heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[3]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,300)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+
+    #### WPD D body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[3]["perform"]["Yes"],outputs_summary[3]["perform"]["No"],outputs_summary[3]["perform"]["NotReported"],outputs_summary[3]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,305)
+
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,405,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,409,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,416,"Yes")
+    p.drawString(110,416,str(outputs_summary[3]["perform"]["Yes"]))
+    p.drawString(135,416,"%d%%" % round(outputs_summary[3]["perform"]["Yes"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,420,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,424,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,431,"No")
+    p.drawString(110,431,str(outputs_summary[3]["perform"]["No"]))
+    p.drawString(135,431,"%d%%" % round(outputs_summary[3]["perform"]["No"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
+    ###### Row 3 "Not Report"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,435,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,439,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,446,"Not Report")
+    p.drawString(110,446,str(outputs_summary[3]["perform"]["NotReported"]))
+    p.drawString(135,446,"%d%%" % round(outputs_summary[3]["perform"]["NotReported"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,450,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,454,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,461,"TBD")
+    p.drawString(110,461,str(outputs_summary[3]["perform"]["TBD"]))
+    p.drawString(135,461,"%d%%" % round(outputs_summary[3]["perform"]["TBD"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,465,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA D1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,380)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D1: Identify Resources and Strategies to Fund First and Last Mile Connections Solutions"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,355-h-h/10)    
+    ###### WPA D2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,380)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
+    # restore previous canvas settings
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D2: Improving First and Last Mile Connections in Neighborhoods and Job Centers"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,355-h-h/10)
+    ###### WPA D3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,450)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
+    # restore previous canvas settings
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D3: Improving First and Last Mile Connections in Neighborhoods and Job Centers"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,425-h-h/10)    
+    
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-D"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 480
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,510,530,1.5,stroke=0,fill=1)    
+
+    ### WPD E
+    #### WPD E heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[4]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,540)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+
+    #### WPD E body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[4]["perform"]["Yes"],outputs_summary[4]["perform"]["No"],outputs_summary[4]["perform"]["NotReported"],outputs_summary[4]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,545)
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,645,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,649,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,656,"Yes")
+    p.drawString(110,656,str(outputs_summary[4]["perform"]["Yes"]))
+    p.drawString(135,656,"%d%%" % round(outputs_summary[4]["perform"]["Yes"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,660,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,664,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,671,"No")
+    p.drawString(110,671,str(outputs_summary[4]["perform"]["No"]))
+    p.drawString(135,671,"%d%%" % round(outputs_summary[4]["perform"]["No"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
+    ###### Row 3 "Not Report"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,675,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,679,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,686,"Not Report")
+    p.drawString(110,686,str(outputs_summary[4]["perform"]["NotReported"]))
+    p.drawString(135,686,"%d%%" % round(outputs_summary[4]["perform"]["NotReported"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,690,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,694,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,701,"TBD")
+    p.drawString(110,701,str(outputs_summary[4]["perform"]["TBD"]))
+    p.drawString(135,701,"%d%%" % round(outputs_summary[4]["perform"]["TBD"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,705,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA E1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,620)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E1: Communications and Outreach"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,595-h-h/10)    
+    ###### WPA E2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,620)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E2: Funder Cultivation, Fundraising, Responsive and Directed Grantmaking"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,595-h-h/10)
+    ###### WPA E3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,690)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E3: Partner and staff engagement, management and support"
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,665-h-h/10)    
+    ###### WPA E4
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,690)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["E4"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()

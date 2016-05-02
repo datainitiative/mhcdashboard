@@ -34,7 +34,7 @@ urlpatterns = patterns('mhcdashboardapp.views',
 	url(r'output/report/customreport/$','output_customreport'),
 	url(r'output/report/customreport2/$','output_customreport_2'),
 	# PDF Report
-	url(r'output/report/customreport/pdf/$','output_customreport_pdf'),	
+	url(r'output/report/customreport/pdf/$','output_customreport_pdf_2016'),	
 	
 	# Export Data as CSV
 	url(r'output/report/exportbuilder$','output_exportbuilder'),
