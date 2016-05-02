@@ -1620,6 +1620,7 @@ def output_customreport_pdf_2016(request):
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
+    wpa_text = {}
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
@@ -1628,6 +1629,7 @@ def output_customreport_pdf_2016(request):
         wpa_list = []
         for wpa in workplan_areas:
             wpa_list.append({wpa.str_id:wpa.description})
+            wpa_text[wpa.str_id] = wpa.description
             wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 tmp_wpd_pf_summary["total"] += 1
@@ -1665,7 +1667,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#08426A"))
     p.drawText(txtobj)
     #### Report Sub-title
-    p_title = "Outputs in 2015 %s" % closed_reporting_quarters
+    p_title = "Outputs in 2016 %s" % closed_reporting_quarters
     txtobj = p.beginText()
     txtobj.setTextOrigin(140,100)
     txtobj.setFont("Helvetica-BoldOblique",18)
@@ -1765,12 +1767,12 @@ def output_customreport_pdf_2016(request):
     ####### Water Bubble
     # temporarily change the canvas by changing origin point and change scale to flip the image
     p.saveState()
-    p.translate(180,260)
+    p.translate(180,230)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()# restore previous canvas settings
     ####### Paragraph
-    p_wpa = "A1: Preservation of affordable housing and critical community facilities near transit"
+    p_wpa = "A1: %s" % wpa_text["A1"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -1778,18 +1780,18 @@ def output_customreport_pdf_2016(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,235-h-h/10)  
+    parag.drawOn(p,245,205-h-h/10)  
     ###### WPA A2
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,260)
+    p.translate(380,230)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
     ####### Paragraph
-    p_wpa = "A2: Development of new affordable housing and community facilities near transit"
+    p_wpa = "A2: %s" % wpa_text["A2"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -1797,26 +1799,26 @@ def output_customreport_pdf_2016(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,445,235-h-h/10)    
+    parag.drawOn(p,445,205-h-h/10)    
     ###### WPA A3
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,340)
+    p.translate(180,370)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A3"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
     ####### Paragraph
-    p_wpa = "A3: Increase and Align Financial Resources for Affordable Housing and Community Facilities"
+    p_wpa = "A3: %s" % wpa_text["A3"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
     para_style.textColor = HexColor("#777777")
     parag = Paragraph(p_wpa,para_style)
-    w,h = parag.wrap(120,80)
+    w,h = parag.wrap(160,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,255,305-h-h/10)
+    parag.drawOn(p,245,350-h-h/10)
 #    ###### WPA A4
 #    p.setStrokeColor(HexColor("#178BCA"))
 #    p.setFillColor(HexColor("#178BCA"))
@@ -1941,7 +1943,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
     ####### Paragraph
-    p_wpa = "B1: Sun Valley Pilot: Connecting residents to good jobs in a redeveloping transit area"
+    p_wpa = "B1: %s" % wpa_text["B1"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -1960,7 +1962,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
     ####### Paragraph
-    p_wpa = "B2: Park Hill Village West Project: Connecting residents to good jobs in a newly developing transit area"
+    p_wpa = "B2: %s" % wpa_text["B2"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -1979,7 +1981,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B3"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
    ####### Paragraph
-    p_wpa = "B3: Anschutz Campus Project: Connecting residents to good jobs via anchor institution"
+    p_wpa = "B3: %s" % wpa_text["B3"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -1998,7 +2000,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B4"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
    ####### Paragraph
-    p_wpa = "B4: Supporting Policy Environment: Equitable Regional Economic Strategy"
+    p_wpa = "B4: %s" % wpa_text["B4"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2156,7 +2158,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["C1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph   
-    p_wpa = "C1: Affordable Bus and Light Rail Fares for Low-Income Riders and Commuters"
+    p_wpa = "C1: %s" % wpa_text["C1"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2175,7 +2177,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["C2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "C2: Affordable Bus and Light Rail Fares for Students: My Denver Card"
+    p_wpa = "C2: %s" % wpa_text["C2"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2306,7 +2308,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "D1: Identify Resources and Strategies to Fund First and Last Mile Connections Solutions"
+    p_wpa = "D1: %s" % wpa_text["D1"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2326,7 +2328,7 @@ def output_customreport_pdf_2016(request):
     # restore previous canvas settings
     p.restoreState()
     ####### Paragraph
-    p_wpa = "D2: Improving First and Last Mile Connections in Neighborhoods and Job Centers"
+    p_wpa = "D2: %s" % wpa_text["D2"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2340,21 +2342,21 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,450)
+    p.translate(180,460)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
     # restore previous canvas settings
     p.restoreState()
     ####### Paragraph
-    p_wpa = "D3: Improving First and Last Mile Connections in Neighborhoods and Job Centers"
+    p_wpa = "D3: %s" % wpa_text["D3"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
     para_style.textColor = HexColor("#777777")
     parag = Paragraph(p_wpa,para_style)
-    w,h = parag.wrap(120,80)
+    w,h = parag.wrap(160,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,425-h-h/10)    
+    parag.drawOn(p,245,445-h-h/10)    
     
     
     ##### Narratives
@@ -2458,7 +2460,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["E1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "E1: Communications and Outreach"
+    p_wpa = "E1: %s" % wpa_text["E1"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2477,7 +2479,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["E2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "E2: Funder Cultivation, Fundraising, Responsive and Directed Grantmaking"
+    p_wpa = "E2: %s" % wpa_text["E2"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2496,7 +2498,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["E3"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "E3: Partner and staff engagement, management and support"
+    p_wpa = "E3: %s" % wpa_text["E3"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2515,7 +2517,7 @@ def output_customreport_pdf_2016(request):
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["E4"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
     ####### Paragraph
-    p_wpa = "E4: Operational systems and policies"
+    p_wpa = "E4: %s" % wpa_text["E4"]
     para_style = styles["Heading4"]
     para_style.fontName = "Helvetica"
     para_style.fontSize = 11
@@ -2584,7 +2586,7 @@ def output_exportbuilder(request):
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "Organization %s has no outputs in work plan direction %s in 2015 Quarter %s." % (org_name,wpd_description,q)
+                        error_msg = "Organization %s has no outputs in work plan direction %s in 2016 Quarter %s." % (org_name,wpd_description,q)
                     else:
                         error_msg = "Organization %s has no outputs in work plan direction %s." % (org_name,wpd_description)
                 else:
@@ -2594,13 +2596,13 @@ def output_exportbuilder(request):
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "There is no outputs in work plan direction %s in 2015 Quarter %s." % (wpd_description,q)
+                        error_msg = "There is no outputs in work plan direction %s in 2016 Quarter %s." % (wpd_description,q)
                     else:                    
                         error_msg = "There is no outputs in work plan direction %s." % wpd_description
                 else:
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "There is no outputs in 2015 Quarter %s." % q
+                        error_msg = "There is no outputs in 2016 Quarter %s." % q
         elif "file" in request.GET and request.GET["file"] != "":
             download_file = request.GET["file"]
     return {
