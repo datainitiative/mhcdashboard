@@ -29,6 +29,7 @@ from django.template import RequestContext
 from django.db.models.loading import get_model
 from django.template.defaultfilters import slugify
 from django.contrib import admin
+from django.utils.encoding import smart_str, smart_unicode
 
 # --------------------
 # Application Imports

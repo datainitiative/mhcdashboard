@@ -2674,11 +2674,11 @@ def exportcsv_output(request,org_id,wpd_id,y_id,q_id):
                         output.orgnization_activity.str_id,
                         output.orgnization_activity.description,
                         output.active_quarter.quarter if output.active_quarter else "",
-                        output.description,
-                        output.location,
+                        smart_str(output.description),
+                        smart_str(output.location),
                         output.get_is_goal_display(),
-                        output.output_value,
-                        output.comment
+                        smart_str(output.output_value),
+                        smart_str(output.comment)
             )
             download_data.append(row_data)
 
