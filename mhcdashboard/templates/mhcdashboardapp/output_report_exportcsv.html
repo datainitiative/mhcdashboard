@@ -54,15 +54,15 @@ blockquote{
 <li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/indicator/">Indicator (Admin)</a></li>
 {% endif %}
 <li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
-<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">Workplan Area</a></li>
-<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">MHC Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/?year=2016">Workplan Area</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/?year=2016">MHC Activity</a></li>
 <li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organization/">Organization</a></li>
-<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">Organization Activity</a></li>
+<li><a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/?year=2016">Organization Activity</a></li>
 <li>
 {% if user|has_group:"Non-profit Staff" %}
 	<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
 {% else %}
-  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+  <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/?orgnization_activity__year=2016">
 {% endif %}
   Output</a>
 </li>
@@ -112,11 +112,19 @@ blockquote{
 								</select>
 							</div>
 							<div class="well">
+								<label>Export by Year&nbsp;&nbsp;</label>
+								<select id="YID" class="form-control">
+									{% for y in years %}
+										<option value={{y}}>{{y}}</option>
+									{% endfor %}
+								</select>
+							</div>
+							<div class="well">
 								<label>Export by Reporting Quarter&nbsp;&nbsp;</label>
 								<select id="QID" class="form-control">
-									<option value=0>------ All Reporting Quarters in 2015 ------</option>
+									<option value=0>------ All Reporting Quarters ------</option>
 									{% for q in reportingquarters %}
-										<option value={{q.id}}>2015 Q{{q.quarter}}</option>
+										<option value={{q.id}}>Q{{q.quarter}}</option>
 									{% endfor %}
 								</select>
 							</div>
@@ -132,10 +140,10 @@ blockquote{
 
 {% block bottomjs %}
 	<script src='{% static "jquery.fileDownload/jquery.fileDownload.js"%}'></script>
-	<script>
+	<script>	
 		var submit_url_root = $("#form_exportcsv").prop("action");
 		function change_action_url(){
-			var submit_url = submit_url_root + $("#OrgID").val() + "/" + $("#WPDID").val() + "/" + $("#QID").val() + "/";
+			var submit_url = submit_url_root + $("#OrgID").val() + "/" + $("#WPDID").val() + "/"  + $("#YID").val() + "/" + $("#QID").val() + "/";
 		$("#form_exportcsv").prop("action",submit_url);
 		}
 		change_action_url();
@@ -143,6 +151,9 @@ blockquote{
 			change_action_url();
 		});
 		$("#WPDID").change(function(){
+			change_action_url();
+		});
+		$("#YID").change(function(){
 			change_action_url();
 		});
 		$("#QID").change(function(){

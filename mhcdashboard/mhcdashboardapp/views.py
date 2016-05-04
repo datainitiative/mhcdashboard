@@ -2605,11 +2605,14 @@ def output_exportbuilder(request):
                         error_msg = "There is no outputs in 2016 Quarter %s." % q
         elif "file" in request.GET and request.GET["file"] != "":
             download_file = request.GET["file"]
+    years = range(2015,datetime.datetime.now().year+1)
+    years.reverse()
     return {
             "error_msg":error_msg,
             "download_file":download_file,
             "organizations":organizations,
             "wpdirections":wpdirections,
+            "years":years,
             "reportingquarters":reportingquarters,
             }
 
@@ -2622,9 +2625,9 @@ class Echo(object):
         return value
 
 # Export Output as CSV file
-def exportcsv_output(request,org_id,wpd_id,q_id):
+def exportcsv_output(request,org_id,wpd_id,y_id,q_id):
     # get all outputs
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=y_id)
     redirect_url = ""
     
     if org_id and int(org_id) > 0:
@@ -2683,7 +2686,7 @@ def exportcsv_output(request,org_id,wpd_id,q_id):
         download_data.sort(key=lambda row:row[0])
         
         # export as CSV
-        tmp_name = "MHC_Dashboard_Outputs_MasterDownload_%s" % datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        tmp_name = "%d_MHC_Dashboard_Outputs_MasterDownload_%s" % (int(y_id),datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         csvfile_name = "%s.csv" % tmp_name
         #response = HttpResponse(content_type='text/csv')
         #response['Content-Disposition'] = 'attachment; filename="%s.csv"' % file_name

@@ -131,7 +131,7 @@ class OrganizationActivityAdmin(admin.ModelAdmin):
     readonly_fields = ('str_id','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments')
     list_display = ('str_id','workplan_area','mhc_activity','organization','description')
     search_fields = ['str_id','description']
-    list_filter = ['workplan_area','mhc_activity','organization','year',HasActiveQuarterListFilter]
+    list_filter = ['workplan_area','mhc_activity','organization',HasActiveQuarterListFilter,'year']
     list_per_page = LIST_PER_PAGE
 admin.site.register(OrganizationActivity,OrganizationActivityAdmin)
 
