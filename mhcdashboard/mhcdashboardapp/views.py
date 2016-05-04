@@ -1136,7 +1136,7 @@ def output_customreport_pdf_2015(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)
     p.drawString(520,763,"Page 1 of 2")
     
@@ -1595,7 +1595,7 @@ def output_customreport_pdf_2015(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)    
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)    
     p.drawString(520,763,"Page 2 of 2")    
 
@@ -1767,7 +1767,7 @@ def output_customreport_pdf_2016(request):
     ####### Water Bubble
     # temporarily change the canvas by changing origin point and change scale to flip the image
     p.saveState()
-    p.translate(180,230)
+    p.translate(180,240)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()# restore previous canvas settings
@@ -1778,15 +1778,15 @@ def output_customreport_pdf_2016(request):
     para_style.fontSize = 11
     para_style.textColor = HexColor("#777777")
     parag = Paragraph(p_wpa,para_style)
-    w,h = parag.wrap(120,80)
+    w,h = parag.wrap(300,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,205-h-h/10)  
+    parag.drawOn(p,245,215-h-h/10)  
     ###### WPA A2
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,230)
+    p.translate(180,330)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -1797,15 +1797,15 @@ def output_customreport_pdf_2016(request):
     para_style.fontSize = 11
     para_style.textColor = HexColor("#777777")
     parag = Paragraph(p_wpa,para_style)
-    w,h = parag.wrap(120,80)
+    w,h = parag.wrap(130,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,445,205-h-h/10)    
+    parag.drawOn(p,245,300-h-h/10)    
     ###### WPA A3
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,370)
+    p.translate(380,330)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["A3"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -1816,9 +1816,9 @@ def output_customreport_pdf_2016(request):
     para_style.fontSize = 11
     para_style.textColor = HexColor("#777777")
     parag = Paragraph(p_wpa,para_style)
-    w,h = parag.wrap(160,80)
+    w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,350-h-h/10)
+    parag.drawOn(p,445,300-h-h/10)
 #    ###### WPA A4
 #    p.setStrokeColor(HexColor("#178BCA"))
 #    p.setFillColor(HexColor("#178BCA"))
@@ -1938,7 +1938,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,570)
+    p.translate(180,565)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -1957,7 +1957,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,570)
+    p.translate(380,565)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B2"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -1976,7 +1976,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,650)
+    p.translate(180,645)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B3"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -1995,7 +1995,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,650)
+    p.translate(380,645)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["B4"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState() # restore previous canvas settings
@@ -2069,7 +2069,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)
     p.drawString(520,763,"Page 1 of 2")
     
@@ -2356,7 +2356,7 @@ def output_customreport_pdf_2016(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(160,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,445-h-h/10)    
+    parag.drawOn(p,245,440-h-h/10)    
     
     
     ##### Narratives
@@ -2525,7 +2525,7 @@ def output_customreport_pdf_2016(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,450,665-h-h/10)
+    parag.drawOn(p,450,670-h-h/10)
 
     ##### Narratives
     p_wpd_narratives = request.POST["TEXT-E"]
@@ -2548,7 +2548,7 @@ def output_customreport_pdf_2016(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)    
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)    
     p.drawString(520,763,"Page 2 of 2")    
 

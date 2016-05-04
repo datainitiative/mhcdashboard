@@ -1,4 +1,7 @@
+import datetime
+
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from mhcdashboardapp.models import *
 
@@ -101,6 +104,26 @@ class OutputInline(admin.TabularInline):
     model = Output
     fields = ['orgnization_activity','active_quarter','description','location','is_goal','output_value','comment']
     extra = 0
+    
+# Custom list filter for Organization Activity to filter by Active Quarter of the outputs
+class HasActiveQuarterListFilter(admin.SimpleListFilter):
+    title = _('Active Quarter')
+    
+    parameter_name = 'has_active_quarter'
+    
+    def lookups(self,request,model_admin):
+        lookup_list = []
+        active_quarters = ActiveQuarter.objects.all()
+        for aq in active_quarters:
+            lookup_list.append((aq.quarter,_('Q%d' % aq.quarter)))
+        return tuple(lookup_list)
+    
+    def queryset(self,request,queryset):
+        if self.value():
+            aq = ActiveQuarter.objects.get(id=int(self.value()))
+            return queryset.filter(output__active_quarter=aq).distinct()
+        else:
+            return queryset
 
 class OrganizationActivityAdmin(admin.ModelAdmin):
     fields = ['str_id','workplan_area','mhc_activity','organization','description','other_comment','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments']
@@ -108,7 +131,7 @@ class OrganizationActivityAdmin(admin.ModelAdmin):
     readonly_fields = ('str_id','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments')
     list_display = ('str_id','workplan_area','mhc_activity','organization','description')
     search_fields = ['str_id','description']
-    list_filter = ['workplan_area','mhc_activity','organization','year']
+    list_filter = ['workplan_area','mhc_activity','organization','year',HasActiveQuarterListFilter]
     list_per_page = LIST_PER_PAGE
 admin.site.register(OrganizationActivity,OrganizationActivityAdmin)
 
