@@ -42,7 +42,7 @@ GOAL_CHOICES = ((1,'Yes'),(0,'No'),(-1,'Not Reported'),(-99,'TBD'))
 #=================
 # Util Functions
 #=================
-TIMEWINDOW_DAYS = 35
+TIMEWINDOW_DAYS = 15
 CURRENT_YEAR = (datetime.date.today()-datetime.timedelta(days=TIMEWINDOW_DAYS)).year
 QUARTER_START_END = (
     (datetime.date(CURRENT_YEAR,1,1)+datetime.timedelta(days=TIMEWINDOW_DAYS),
