@@ -300,7 +300,6 @@ def report_output(request):
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
     tmp_username_list = ["Admin","admin","DWest","PAldretti"]
-    tmp_user
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
