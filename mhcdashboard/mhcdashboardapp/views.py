@@ -299,6 +299,8 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
+    tmp_username_list = ["Admin","admin","DWest","PAldretti"]
+    tmp_user
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
@@ -311,7 +313,7 @@ def report_output_temp(request,qid):
     mhc_activitie_ids = []
     org_activities = []
     org_activitie_ids = []
-    outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')   
+    outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
 
     for op in outputs_current:
         if not (op.orgnization_activity.workplan_area in workplan_areas):
@@ -323,11 +325,11 @@ def report_output_temp(request,qid):
             org_activities.append(op.orgnization_activity)
             org_activitie_ids.append(op.orgnization_activity.id)       
     if report_q > 1:
-        outputs_previous = Output.objects.filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
+        outputs_previous = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
     else:
         outputs_previous = None
-    
-    outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+
+    outputs_report = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
     if request.method == 'POST':
         # pre-select Workplan Area, MHC Activity, Org Activity as filters
         if request.POST["OrgActID"]:
@@ -394,9 +396,9 @@ def report_output_temp(request,qid):
                 error_info = exc_obj
                 error_msg = "%s: %s. Please try again!" % (error_type,error_info)
         if error_msg == "":
-            outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+            outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
-    
+
     return {"report_quarter":report_q,
         "organization":organization,
         "select_options":select_options,
@@ -407,8 +409,10 @@ def report_output_temp(request,qid):
         "org_activitie_ids":org_activitie_ids,
         "outputs_current":outputs_current,
         "outputs_previous":outputs_previous,
+        "current_year":datetime.datetime.now().year,
         "error_msg":error_msg,
-        "save_msg":save_msg
+        "save_msg":save_msg,
+        "tmp_username_list":tmp_username_list
     }
 
 '''-----------------------
