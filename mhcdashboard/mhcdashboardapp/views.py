@@ -281,7 +281,9 @@ def report_output(request):
             outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
     
-    return {"report_quarter":report_q,
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -398,7 +400,9 @@ def report_output_temp(request,qid):
             outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
 
-    return {"report_quarter":report_q,
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -453,7 +457,8 @@ def output_reportpage_1(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Report Template 2 - Bullet Bar
@@ -492,7 +497,8 @@ def output_reportpage_2(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
     
 # Report Builder with Template 1
@@ -531,7 +537,8 @@ def output_reportpage_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
 
 # Report Builder with Template 2
@@ -570,7 +577,8 @@ def output_reportpage_2_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
     
 @login_required
@@ -675,7 +683,8 @@ def output_customreport_2(request):
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
         "barpiechart_data":outputs_summary_json,
-        "highlight_text":highlight_text_json
+        "highlight_text":highlight_text_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Export report as PDF
