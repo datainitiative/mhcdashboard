@@ -283,7 +283,7 @@ td.field-is_goal{
 <script src='{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"%}'></script>
 <script>
 	<!-- Override admin title -->
-	$('._inline-group').find('h2').text('Report Outputs for 2015 Quarter {{report_quarter}}');
+	$('._inline-group').find('h2').text('Report Outputs for {{report_year}} Quarter {{report_quarter}}');
 	<!-- Pre-select options if form is submitted -->
 	if('{{select_options}}'!=="None")
 	{

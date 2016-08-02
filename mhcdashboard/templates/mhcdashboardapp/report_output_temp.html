@@ -270,7 +270,7 @@ td.field-is_goal{
 								</div>
 							</div>
 						{% else %}
-							The current report is Quarter 1, 2015. There is currently no previous quarter outputs to view.
+							The current report is Quarter 1, {{report_year}}. There is currently no previous quarter outputs to view.
 						{% endif %}
 					</div>
 				</div>
@@ -289,7 +289,7 @@ td.field-is_goal{
 <script src='{% static "datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.min.js"%}'></script>
 <script>
 	<!-- Override admin title -->
-	$('._inline-group').find('h2').text('Report Outputs for 2015 Quarter {{report_quarter}}');
+	$('._inline-group').find('h2').text('Report Outputs for {{report_year}} Quarter {{report_quarter}}');
 	<!-- Pre-select options if form is submitted -->
 	if('{{select_options}}'!=="None")
 	{

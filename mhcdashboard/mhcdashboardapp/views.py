@@ -281,7 +281,9 @@ def report_output(request):
             outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
     
-    return {"report_quarter":report_q,
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -299,7 +301,11 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
+<<<<<<< HEAD
     tmp_username_list = ["Admin","admin","ZWilliams"]
+=======
+    tmp_username_list = ["Admin","admin"]
+>>>>>>> 3c84dcc229720ff676e084b51136a147461677e9
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
@@ -398,7 +404,9 @@ def report_output_temp(request,qid):
             outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
 
-    return {"report_quarter":report_q,
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -453,7 +461,8 @@ def output_reportpage_1(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Report Template 2 - Bullet Bar
@@ -492,7 +501,8 @@ def output_reportpage_2(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
     
 # Report Builder with Template 1
@@ -531,7 +541,8 @@ def output_reportpage_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
 
 # Report Builder with Template 2
@@ -570,7 +581,8 @@ def output_reportpage_2_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
     
 @login_required
@@ -675,7 +687,8 @@ def output_customreport_2(request):
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
         "barpiechart_data":outputs_summary_json,
-        "highlight_text":highlight_text_json
+        "highlight_text":highlight_text_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Export report as PDF
@@ -773,7 +786,7 @@ def output_customreport_pdf_2015(request):
     pc.width = 95
     pc.height = 95
     pc.data = [outputs_summary[0]["perform"]["Yes"],outputs_summary[0]["perform"]["No"],outputs_summary[0]["perform"]["NotReported"],outputs_summary[0]["perform"]["TBD"]]
-#    pc.labels = ["Yes","Not Reported"] # pie chart label
+#    pc.labels = ["Yes","Not reported"] # pie chart label
     pc.slices.strokeWidth = 1
     pc.slices.strokeColor = HexColor("#FFFFFF")
     pc.slices[0].fillColor = HexColor("#41AB5D")
@@ -797,7 +810,7 @@ def output_customreport_pdf_2015(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,286,"Yes")
-    p.drawString(110,286,str(outputs_summary[0]["perform"]["Yes"]))
+    p.drawString(115,286,str(outputs_summary[0]["perform"]["Yes"]))
     p.drawString(135,286,"%d%%" % round(outputs_summary[0]["perform"]["Yes"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -806,16 +819,16 @@ def output_customreport_pdf_2015(request):
     p.rect(45,294,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,301,"No")
-    p.drawString(110,301,str(outputs_summary[0]["perform"]["No"]))
+    p.drawString(115,301,str(outputs_summary[0]["perform"]["No"]))
     p.drawString(135,301,"%d%%" % round(outputs_summary[0]["perform"]["No"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,305,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,309,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,316,"Not Report")
-    p.drawString(110,316,str(outputs_summary[0]["perform"]["NotReported"]))
+    p.drawString(60,316,"Not reported")
+    p.drawString(115,316,str(outputs_summary[0]["perform"]["NotReported"]))
     p.drawString(135,316,"%d%%" % round(outputs_summary[0]["perform"]["NotReported"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -824,7 +837,7 @@ def output_customreport_pdf_2015(request):
     p.rect(45,324,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,331,"TBD")
-    p.drawString(110,331,str(outputs_summary[0]["perform"]["TBD"]))
+    p.drawString(115,331,str(outputs_summary[0]["perform"]["TBD"]))
     p.drawString(135,331,"%d%%" % round(outputs_summary[0]["perform"]["TBD"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,335,120,0.5,stroke=0,fill=1)
@@ -970,7 +983,7 @@ def output_customreport_pdf_2015(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,586,"Yes")
-    p.drawString(110,586,str(outputs_summary[1]["perform"]["Yes"]))
+    p.drawString(115,586,str(outputs_summary[1]["perform"]["Yes"]))
     p.drawString(135,586,"%d%%" % round(outputs_summary[1]["perform"]["Yes"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -979,16 +992,16 @@ def output_customreport_pdf_2015(request):
     p.rect(45,594,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,601,"No")
-    p.drawString(110,601,str(outputs_summary[1]["perform"]["No"]))
+    p.drawString(115,601,str(outputs_summary[1]["perform"]["No"]))
     p.drawString(135,601,"%d%%" % round(outputs_summary[1]["perform"]["No"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,605,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,609,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,616,"Not Report")
-    p.drawString(110,616,str(outputs_summary[1]["perform"]["NotReported"]))
+    p.drawString(60,616,"Not reported")
+    p.drawString(115,616,str(outputs_summary[1]["perform"]["NotReported"]))
     p.drawString(135,616,"%d%%" % round(outputs_summary[1]["perform"]["NotReported"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -997,7 +1010,7 @@ def output_customreport_pdf_2015(request):
     p.rect(45,624,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,631,"TBD")
-    p.drawString(110,631,str(outputs_summary[1]["perform"]["TBD"]))
+    p.drawString(115,631,str(outputs_summary[1]["perform"]["TBD"]))
     p.drawString(135,631,"%d%%" % round(outputs_summary[1]["perform"]["TBD"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,635,120,0.5,stroke=0,fill=1)
@@ -1185,7 +1198,7 @@ def output_customreport_pdf_2015(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,176,"Yes")
-    p.drawString(110,176,str(outputs_summary[2]["perform"]["Yes"]))
+    p.drawString(115,176,str(outputs_summary[2]["perform"]["Yes"]))
     p.drawString(135,176,"%d%%" % round(outputs_summary[2]["perform"]["Yes"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1194,16 +1207,16 @@ def output_customreport_pdf_2015(request):
     p.rect(45,184,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,191,"No")
-    p.drawString(110,191,str(outputs_summary[2]["perform"]["No"]))
+    p.drawString(115,191,str(outputs_summary[2]["perform"]["No"]))
     p.drawString(135,191,"%d%%" % round(outputs_summary[2]["perform"]["No"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,195,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,199,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,206,"Not Report")
-    p.drawString(110,206,str(outputs_summary[2]["perform"]["NotReported"]))
+    p.drawString(60,206,"Not reported")
+    p.drawString(115,206,str(outputs_summary[2]["perform"]["NotReported"]))
     p.drawString(135,206,"%d%%" % round(outputs_summary[2]["perform"]["NotReported"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1212,7 +1225,7 @@ def output_customreport_pdf_2015(request):
     p.rect(45,214,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,221,"TBD")
-    p.drawString(110,221,str(outputs_summary[2]["perform"]["TBD"]))
+    p.drawString(115,221,str(outputs_summary[2]["perform"]["TBD"]))
     p.drawString(135,221,"%d%%" % round(outputs_summary[2]["perform"]["TBD"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,225,120,0.5,stroke=0,fill=1)
@@ -1335,7 +1348,7 @@ def output_customreport_pdf_2015(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,416,"Yes")
-    p.drawString(110,416,str(outputs_summary[3]["perform"]["Yes"]))
+    p.drawString(115,416,str(outputs_summary[3]["perform"]["Yes"]))
     p.drawString(135,416,"%d%%" % round(outputs_summary[3]["perform"]["Yes"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1344,16 +1357,16 @@ def output_customreport_pdf_2015(request):
     p.rect(45,424,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,431,"No")
-    p.drawString(110,431,str(outputs_summary[3]["perform"]["No"]))
+    p.drawString(115,431,str(outputs_summary[3]["perform"]["No"]))
     p.drawString(135,431,"%d%%" % round(outputs_summary[3]["perform"]["No"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,435,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,439,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,446,"Not Report")
-    p.drawString(110,446,str(outputs_summary[3]["perform"]["NotReported"]))
+    p.drawString(60,446,"Not reported")
+    p.drawString(115,446,str(outputs_summary[3]["perform"]["NotReported"]))
     p.drawString(135,446,"%d%%" % round(outputs_summary[3]["perform"]["NotReported"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1362,7 +1375,7 @@ def output_customreport_pdf_2015(request):
     p.rect(45,454,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,461,"TBD")
-    p.drawString(110,461,str(outputs_summary[3]["perform"]["TBD"]))
+    p.drawString(115,461,str(outputs_summary[3]["perform"]["TBD"]))
     p.drawString(135,461,"%d%%" % round(outputs_summary[3]["perform"]["TBD"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,465,120,0.5,stroke=0,fill=1)
@@ -1467,7 +1480,7 @@ def output_customreport_pdf_2015(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,656,"Yes")
-    p.drawString(110,656,str(outputs_summary[4]["perform"]["Yes"]))
+    p.drawString(115,656,str(outputs_summary[4]["perform"]["Yes"]))
     p.drawString(135,656,"%d%%" % round(outputs_summary[4]["perform"]["Yes"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1476,16 +1489,16 @@ def output_customreport_pdf_2015(request):
     p.rect(45,664,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,671,"No")
-    p.drawString(110,671,str(outputs_summary[4]["perform"]["No"]))
+    p.drawString(115,671,str(outputs_summary[4]["perform"]["No"]))
     p.drawString(135,671,"%d%%" % round(outputs_summary[4]["perform"]["No"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,675,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,679,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,686,"Not Report")
-    p.drawString(110,686,str(outputs_summary[4]["perform"]["NotReported"]))
+    p.drawString(60,686,"Not reported")
+    p.drawString(115,686,str(outputs_summary[4]["perform"]["NotReported"]))
     p.drawString(135,686,"%d%%" % round(outputs_summary[4]["perform"]["NotReported"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1494,7 +1507,7 @@ def output_customreport_pdf_2015(request):
     p.rect(45,694,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,701,"TBD")
-    p.drawString(110,701,str(outputs_summary[4]["perform"]["TBD"]))
+    p.drawString(115,701,str(outputs_summary[4]["perform"]["TBD"]))
     p.drawString(135,701,"%d%%" % round(outputs_summary[4]["perform"]["TBD"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,705,120,0.5,stroke=0,fill=1)
@@ -1706,7 +1719,7 @@ def output_customreport_pdf_2016(request):
     pc.width = 95
     pc.height = 95
     pc.data = [outputs_summary[0]["perform"]["Yes"],outputs_summary[0]["perform"]["No"],outputs_summary[0]["perform"]["NotReported"],outputs_summary[0]["perform"]["TBD"]]
-#    pc.labels = ["Yes","Not Reported"] # pie chart label
+#    pc.labels = ["Yes","Not reported"] # pie chart label
     pc.slices.strokeWidth = 1
     pc.slices.strokeColor = HexColor("#FFFFFF")
     pc.slices[0].fillColor = HexColor("#41AB5D")
@@ -1730,7 +1743,7 @@ def output_customreport_pdf_2016(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,306,"Yes")
-    p.drawString(110,306,str(outputs_summary[0]["perform"]["Yes"]))
+    p.drawString(115,306,str(outputs_summary[0]["perform"]["Yes"]))
     p.drawString(135,306,"%d%%" % round(outputs_summary[0]["perform"]["Yes"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1739,16 +1752,16 @@ def output_customreport_pdf_2016(request):
     p.rect(45,314,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,321,"No")
-    p.drawString(110,321,str(outputs_summary[0]["perform"]["No"]))
+    p.drawString(115,321,str(outputs_summary[0]["perform"]["No"]))
     p.drawString(135,321,"%d%%" % round(outputs_summary[0]["perform"]["No"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,325,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,329,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,336,"Not Report")
-    p.drawString(110,336,str(outputs_summary[0]["perform"]["NotReported"]))
+    p.drawString(60,336,"Not reported")
+    p.drawString(115,336,str(outputs_summary[0]["perform"]["NotReported"]))
     p.drawString(135,336,"%d%%" % round(outputs_summary[0]["perform"]["NotReported"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1757,7 +1770,7 @@ def output_customreport_pdf_2016(request):
     p.rect(45,344,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,351,"TBD")
-    p.drawString(110,351,str(outputs_summary[0]["perform"]["TBD"]))
+    p.drawString(115,351,str(outputs_summary[0]["perform"]["TBD"]))
     p.drawString(135,351,"%d%%" % round(outputs_summary[0]["perform"]["TBD"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,355,120,0.5,stroke=0,fill=1)
@@ -1903,7 +1916,7 @@ def output_customreport_pdf_2016(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,616,"Yes")
-    p.drawString(110,616,str(outputs_summary[1]["perform"]["Yes"]))
+    p.drawString(115,616,str(outputs_summary[1]["perform"]["Yes"]))
     p.drawString(135,616,"%d%%" % round(outputs_summary[1]["perform"]["Yes"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1912,16 +1925,16 @@ def output_customreport_pdf_2016(request):
     p.rect(45,624,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,631,"No")
-    p.drawString(110,631,str(outputs_summary[1]["perform"]["No"]))
+    p.drawString(115,631,str(outputs_summary[1]["perform"]["No"]))
     p.drawString(135,631,"%d%%" % round(outputs_summary[1]["perform"]["No"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,635,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,639,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,646,"Not Report")
-    p.drawString(110,646,str(outputs_summary[1]["perform"]["NotReported"]))
+    p.drawString(60,646,"Not reported")
+    p.drawString(115,646,str(outputs_summary[1]["perform"]["NotReported"]))
     p.drawString(135,646,"%d%%" % round(outputs_summary[1]["perform"]["NotReported"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1930,7 +1943,7 @@ def output_customreport_pdf_2016(request):
     p.rect(45,654,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,661,"TBD")
-    p.drawString(110,661,str(outputs_summary[1]["perform"]["TBD"]))
+    p.drawString(115,661,str(outputs_summary[1]["perform"]["TBD"]))
     p.drawString(135,661,"%d%%" % round(outputs_summary[1]["perform"]["TBD"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,665,120,0.5,stroke=0,fill=1)
@@ -2118,7 +2131,7 @@ def output_customreport_pdf_2016(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,176,"Yes")
-    p.drawString(110,176,str(outputs_summary[2]["perform"]["Yes"]))
+    p.drawString(115,176,str(outputs_summary[2]["perform"]["Yes"]))
     p.drawString(135,176,"%d%%" % round(outputs_summary[2]["perform"]["Yes"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -2127,16 +2140,16 @@ def output_customreport_pdf_2016(request):
     p.rect(45,184,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,191,"No")
-    p.drawString(110,191,str(outputs_summary[2]["perform"]["No"]))
+    p.drawString(115,191,str(outputs_summary[2]["perform"]["No"]))
     p.drawString(135,191,"%d%%" % round(outputs_summary[2]["perform"]["No"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,195,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,199,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,206,"Not Report")
-    p.drawString(110,206,str(outputs_summary[2]["perform"]["NotReported"]))
+    p.drawString(60,206,"Not reported")
+    p.drawString(115,206,str(outputs_summary[2]["perform"]["NotReported"]))
     p.drawString(135,206,"%d%%" % round(outputs_summary[2]["perform"]["NotReported"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -2145,7 +2158,7 @@ def output_customreport_pdf_2016(request):
     p.rect(45,214,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,221,"TBD")
-    p.drawString(110,221,str(outputs_summary[2]["perform"]["TBD"]))
+    p.drawString(115,221,str(outputs_summary[2]["perform"]["TBD"]))
     p.drawString(135,221,"%d%%" % round(outputs_summary[2]["perform"]["TBD"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,225,120,0.5,stroke=0,fill=1)
@@ -2268,7 +2281,7 @@ def output_customreport_pdf_2016(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,416,"Yes")
-    p.drawString(110,416,str(outputs_summary[3]["perform"]["Yes"]))
+    p.drawString(115,416,str(outputs_summary[3]["perform"]["Yes"]))
     p.drawString(135,416,"%d%%" % round(outputs_summary[3]["perform"]["Yes"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -2277,16 +2290,16 @@ def output_customreport_pdf_2016(request):
     p.rect(45,424,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,431,"No")
-    p.drawString(110,431,str(outputs_summary[3]["perform"]["No"]))
+    p.drawString(115,431,str(outputs_summary[3]["perform"]["No"]))
     p.drawString(135,431,"%d%%" % round(outputs_summary[3]["perform"]["No"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,435,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,439,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,446,"Not Report")
-    p.drawString(110,446,str(outputs_summary[3]["perform"]["NotReported"]))
+    p.drawString(60,446,"Not reported")
+    p.drawString(115,446,str(outputs_summary[3]["perform"]["NotReported"]))
     p.drawString(135,446,"%d%%" % round(outputs_summary[3]["perform"]["NotReported"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -2295,7 +2308,7 @@ def output_customreport_pdf_2016(request):
     p.rect(45,454,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,461,"TBD")
-    p.drawString(110,461,str(outputs_summary[3]["perform"]["TBD"]))
+    p.drawString(115,461,str(outputs_summary[3]["perform"]["TBD"]))
     p.drawString(135,461,"%d%%" % round(outputs_summary[3]["perform"]["TBD"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,465,120,0.5,stroke=0,fill=1)
@@ -2420,7 +2433,7 @@ def output_customreport_pdf_2016(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,656,"Yes")
-    p.drawString(110,656,str(outputs_summary[4]["perform"]["Yes"]))
+    p.drawString(115,656,str(outputs_summary[4]["perform"]["Yes"]))
     p.drawString(135,656,"%d%%" % round(outputs_summary[4]["perform"]["Yes"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -2429,16 +2442,16 @@ def output_customreport_pdf_2016(request):
     p.rect(45,664,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,671,"No")
-    p.drawString(110,671,str(outputs_summary[4]["perform"]["No"]))
+    p.drawString(115,671,str(outputs_summary[4]["perform"]["No"]))
     p.drawString(135,671,"%d%%" % round(outputs_summary[4]["perform"]["No"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,675,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,679,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,686,"Not Report")
-    p.drawString(110,686,str(outputs_summary[4]["perform"]["NotReported"]))
+    p.drawString(60,686,"Not reported")
+    p.drawString(115,686,str(outputs_summary[4]["perform"]["NotReported"]))
     p.drawString(135,686,"%d%%" % round(outputs_summary[4]["perform"]["NotReported"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -2447,7 +2460,7 @@ def output_customreport_pdf_2016(request):
     p.rect(45,694,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,701,"TBD")
-    p.drawString(110,701,str(outputs_summary[4]["perform"]["TBD"]))
+    p.drawString(115,701,str(outputs_summary[4]["perform"]["TBD"]))
     p.drawString(135,701,"%d%%" % round(outputs_summary[4]["perform"]["TBD"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,705,120,0.5,stroke=0,fill=1)
