@@ -299,7 +299,7 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
-    tmp_username_list = ["Admin","admin","PAldretti"]
+    tmp_username_list = ["Admin","admin","ZWilliams"]
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
