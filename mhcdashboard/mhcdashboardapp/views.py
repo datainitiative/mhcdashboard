@@ -301,11 +301,7 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
-<<<<<<< HEAD
     tmp_username_list = ["Admin","admin","ZWilliams"]
-=======
-    tmp_username_list = ["Admin","admin"]
->>>>>>> 3c84dcc229720ff676e084b51136a147461677e9
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
