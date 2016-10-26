@@ -14,6 +14,7 @@ from django.core.files.base import ContentFile
 import json
 import csv
 import base64
+import datetime
 from zipfile import *
 import collections # for OrderedDict
 
@@ -301,7 +302,16 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
-    tmp_username_list = ["Admin","admin","NMahajan","DGagne","test"]
+    tmp_username_list = ["Admin","admin"]
+    all_users = MyUser.objects.all()
+    for mu in all_users:
+        if (mu.user.username not in ("admin","Admin")) and mu.temp_access_expire:
+            print datetime.date.today()
+            print mu.temp_access_expire
+            print datetime.date.today() <= mu.temp_access_expire
+            if (mu.has_temp_access == 1) and (datetime.date.today() <= mu.temp_access_expire):
+                tmp_username_list.append(mu.user.username)
+    print tmp_username_list
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)

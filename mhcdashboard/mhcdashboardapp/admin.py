@@ -8,8 +8,8 @@ from mhcdashboardapp.models import *
 LIST_PER_PAGE = 10
 
 class MyUserAdmin(admin.ModelAdmin):
-    fields = ['user','organization']
-    list_display = ('user','_get_user_first_name','_get_user_first_name','organization','_get_user_email')
+    fields = ['user','organization','has_temp_access','temp_access_expire']
+    list_display = ('user','_get_user_first_name','_get_user_first_name','organization','_get_user_email','has_temp_access','temp_access_expire')
     search_fields = ['user','_get_user_first_name','_get_user_first_name','organization','_get_user_email']
 admin.site.register(MyUser,MyUserAdmin)
 

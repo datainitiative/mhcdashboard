@@ -193,6 +193,8 @@ class MyUser(models.Model):
 #    id =  models.IntegerField(primary_key=True)
     user = models.ForeignKey(User)
     organization = models.ForeignKey(Organization)
+    has_temp_access = models.IntegerField(choices=BOOL_CHOICES,default=0,verbose_name='Temporary Access?')
+    temp_access_expire = models.DateField(null=True,blank=True,verbose_name='Temporary Access Expiration Date')
     
     def __unicode__(self):
         return "%s %s" % (self.user.first_name,self.user.last_name)
