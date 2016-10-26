@@ -306,9 +306,6 @@ def report_output_temp(request,qid):
     all_users = MyUser.objects.all()
     for mu in all_users:
         if (mu.user.username not in ("admin","Admin")) and mu.temp_access_expire:
-            print datetime.date.today()
-            print mu.temp_access_expire
-            print datetime.date.today() <= mu.temp_access_expire
             if (mu.has_temp_access == 1) and (datetime.date.today() <= mu.temp_access_expire):
                 tmp_username_list.append(mu.user.username)
     print tmp_username_list
