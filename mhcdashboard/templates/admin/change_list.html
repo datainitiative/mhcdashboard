@@ -70,12 +70,12 @@
 {% endif %}
 <li><a href="{% setting 'ROOT_APP_URL' %}/indicator/">Indicator</a></li>
 <li>
-  {% if not cl.opts.model_name == "workplanarea" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">{% endif %}
+  {% if not cl.opts.model_name == "workplanarea" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/?year=2016">{% endif %}
   Workplan Area
   {% if not cl.opts.model_name == "workplanarea" %}</a>{% endif %}
 </li>
 <li>
-  {% if not cl.opts.model_name == "mhcactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">{% endif %}
+  {% if not cl.opts.model_name == "mhcactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/?year=2016">{% endif %}
   MHC Activity
   {% if not cl.opts.model_name == "mhcactivity" %}</a>{% endif %}
 </li>
@@ -85,7 +85,7 @@
   {% if not cl.opts.model_name == "organization" %}</a>{% endif %}
 </li>
 <li>
-  {% if not cl.opts.model_name == "organizationactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">{% endif %}
+  {% if not cl.opts.model_name == "organizationactivity" %}<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/?year=2016">{% endif %}
   Organization Activity
   {% if not cl.opts.model_name == "organizationactivity" %}</a>{% endif %}
 </li>
@@ -94,7 +94,7 @@
     {% if user|has_group:"Non-profit Staff" %}
       <a href="{% setting 'ROOT_APP_URL' %}/output/report/">
     {% else %}
-      <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+      <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/?orgnization_activity__year=2016">
     {% endif %}
   {% endif %}
   Output

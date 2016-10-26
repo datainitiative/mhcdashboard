@@ -1,4 +1,7 @@
+import datetime
+
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from mhcdashboardapp.models import *
 
@@ -57,11 +60,11 @@ class WorkplanAreaAdmin(admin.ModelAdmin):
 #        (None, {'fields':['str_id']}),
 #        ('More Information', {'fields':['description'],'classes':['collapse']}),
 #    ]
-    fields = ['str_id','description','workplan_direction']
+    fields = ['str_id','description','workplan_direction','year']
     inlines = [MHCActivityInline]
-    list_display = ('str_id','description','workplan_direction')
-    search_fields = ['str_id','description']
-    list_filter = ['workplan_direction']
+    list_display = ('str_id','description','workplan_direction','year')
+    search_fields = ['str_id','description','year']
+    list_filter = ['workplan_direction','year']
     list_per_page = LIST_PER_PAGE
     save_on_top = True
 admin.site.register(WorkplanArea,WorkplanAreaAdmin)
@@ -77,7 +80,7 @@ class MHCActivityAdmin(admin.ModelAdmin):
     inlines = [OrganizationActivityInline]
     readonly_fields = ('str_id',)
     list_display = ('str_id','description','workplan_area')
-    list_filter = ['workplan_area']
+    list_filter = ['workplan_area','year']
     search_fields = ['str_id','description']
     list_per_page = LIST_PER_PAGE
 admin.site.register(MHCActivity,MHCActivityAdmin)
@@ -101,6 +104,26 @@ class OutputInline(admin.TabularInline):
     model = Output
     fields = ['orgnization_activity','active_quarter','description','location','is_goal','output_value','comment']
     extra = 0
+    
+# Custom list filter for Organization Activity to filter by Active Quarter of the outputs
+class HasActiveQuarterListFilter(admin.SimpleListFilter):
+    title = _('Active Quarter')
+    
+    parameter_name = 'has_active_quarter'
+    
+    def lookups(self,request,model_admin):
+        lookup_list = []
+        active_quarters = ActiveQuarter.objects.all()
+        for aq in active_quarters:
+            lookup_list.append((aq.quarter,_('Q%d' % aq.quarter)))
+        return tuple(lookup_list)
+    
+    def queryset(self,request,queryset):
+        if self.value():
+            aq = ActiveQuarter.objects.get(id=int(self.value()))
+            return queryset.filter(output__active_quarter=aq).distinct()
+        else:
+            return queryset
 
 class OrganizationActivityAdmin(admin.ModelAdmin):
     fields = ['str_id','workplan_area','mhc_activity','organization','description','other_comment','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments']
@@ -108,7 +131,7 @@ class OrganizationActivityAdmin(admin.ModelAdmin):
     readonly_fields = ('str_id','q1_comment','q2_comment','q3_comment','q4_comment','_get_all_comments')
     list_display = ('str_id','workplan_area','mhc_activity','organization','description')
     search_fields = ['str_id','description']
-    list_filter = ['workplan_area','mhc_activity','organization']
+    list_filter = ['workplan_area','mhc_activity','organization',HasActiveQuarterListFilter,'year']
     list_per_page = LIST_PER_PAGE
 admin.site.register(OrganizationActivity,OrganizationActivityAdmin)
 
@@ -129,6 +152,6 @@ class OutputAdmin(admin.ModelAdmin):
     fields = ['orgnization_activity','active_quarter','description','location','is_goal','output_value','comment']
     list_display = ('orgnization_activity','active_quarter','description','location','is_goal','output_value')
     search_fields = ['description']
-    list_filter = ['orgnization_activity__organization','orgnization_activity','active_quarter','is_goal']
+    list_filter = ['orgnization_activity__organization','orgnization_activity','active_quarter','is_goal','orgnization_activity__year']
     list_per_page = LIST_PER_PAGE
 admin.site.register(Output,OutputAdmin)

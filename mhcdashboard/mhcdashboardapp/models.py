@@ -267,6 +267,7 @@ class WorkplanArea(models.Model):
     str_id = models.CharField(max_length=2,verbose_name='Workplan Area ID')
     description = models.TextField(max_length=500)
     workplan_direction = models.ForeignKey('WorkplanDirection',null=True)
+    year = models.IntegerField(default=datetime.datetime.now().year)
   
     def __unicode__(self):
         return "%s: %s" % (self.str_id,self.description)
@@ -298,6 +299,7 @@ class MHCActivity(models.Model):
     str_id = models.CharField(max_length=10,null=True,verbose_name='MHC Activity ID')
     workplan_area = models.ForeignKey('WorkplanArea',verbose_name='Workplan Area')
     description = models.TextField(max_length=500)
+    year = models.IntegerField(default=datetime.datetime.now().year)
   
     def __unicode__(self):
         return "%s: %s" % (self.str_id,self.description)
@@ -359,6 +361,7 @@ class OrganizationActivity(models.Model):
     q4_comment = models.CharField(max_length=5000,null=True,blank=True)
     other_comment = models.CharField(max_length=500,null=True,blank=True,verbose_name='Other Comment')
     origin_strid = models.CharField(max_length=50,null=True,blank=True)
+    year = models.IntegerField(default=-1)
     
     def __unicode__(self):
         return "%s: %s" % (self.str_id,self.description)

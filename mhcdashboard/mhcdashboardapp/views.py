@@ -64,17 +64,17 @@ Home Page
 @login_required
 @render_to("mhcdashboardapp/home.html")
 def home(request):
-    workplanareas = WorkplanArea.objects.all()
-    mhcactivities = MHCActivity.objects.all()
-    orgactivities = OrganizationActivity.objects.all()
+    workplanareas = WorkplanArea.objects.filter(year=datetime.datetime.now().year)
+    mhcactivities = MHCActivity.objects.filter(year=datetime.datetime.now().year)
+    orgactivities = OrganizationActivity.objects.filter(year=datetime.datetime.now().year)
     organizations = []
     orgs = Organization.objects.all()
     for org in orgs:
         if org._get_activity_quarters() != "No active quarters reporting on":
             organizations.append(org)
     indicators = Indicator.objects.all()
-    outputs = Output.objects.all()
-    outputs_goal_no = Output.objects.filter(is_goal=0)
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
+    outputs_goal_no = Output.objects.filter(is_goal=0,orgnization_activity__year=datetime.datetime.now().year)
     org_qt_summary_all = []
     org_qt_summary_goal = []
     org_pf_summary = []
@@ -92,7 +92,7 @@ def home(request):
         tmp_org_pf_summary_q2 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
         tmp_org_pf_summary_q3 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
         tmp_org_pf_summary_q4 = collections.OrderedDict([("Org",org.abbreviation),("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))])
-        org_outputs = Output.objects.filter(orgnization_activity__organization=tmp_org)
+        org_outputs = Output.objects.filter(orgnization_activity__organization=tmp_org,orgnization_activity__year=datetime.datetime.now().year)
         for org_output in org_outputs:
             if org_output.active_quarter is not None:
                 tmp_org_qt_summary_all["quarter"]["Q%d" % org_output.active_quarter.quarter] += 1
@@ -127,7 +127,7 @@ def home(request):
     workplanarea_num_orgact = {}
     for wpa in workplanareas:
         workplanarea_goals[wpa.str_id] = 0
-        workplanarea_num_orgact[wpa.str_id] = len(OrganizationActivity.objects.filter(workplan_area=wpa.id))
+        workplanarea_num_orgact[wpa.str_id] = len(OrganizationActivity.objects.filter(workplan_area=wpa.id,year=datetime.datetime.now().year))
     orgact_summary = []
     for orgact in orgactivities:
         outputs_num = len(Output.objects.filter(orgnization_activity=orgact.id))
@@ -146,7 +146,7 @@ def home(request):
         if value > 0:
             piechart_data.append({
                 "label": key,
-                "data": float(value)/workplanarea_num_orgact[key]
+                "data": float(value)/workplanarea_num_orgact[key] if workplanarea_num_orgact[key] != 0 else 0
             })
     piechart_data_json = json.dumps(piechart_data)
     return {"num_workplanarea":len(workplanareas),
@@ -195,9 +195,8 @@ def report_output(request):
     mhc_activitie_ids = []
     org_activities = []
     org_activitie_ids = []
-    outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
-    
-    #outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+    outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+
     for op in outputs_current:
         if not (op.orgnization_activity.workplan_area in workplan_areas):
             workplan_areas.append(op.orgnization_activity.workplan_area)
@@ -208,11 +207,11 @@ def report_output(request):
             org_activities.append(op.orgnization_activity)
             org_activitie_ids.append(op.orgnization_activity.id)       
     if report_q > 1:
-        outputs_previous = Output.objects.filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
+        outputs_previous = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
     else:
         outputs_previous = None
     
-    outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+    outputs_report = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
     if request.method == 'POST':
         # pre-select Workplan Area, MHC Activity, Org Activity as filters
         if request.POST["OrgActID"]:
@@ -272,7 +271,6 @@ def report_output(request):
                     else:
                         op.is_goal = -99
             try:
-                print op.is_goal
                 op.save()
             except Exception, e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -280,10 +278,12 @@ def report_output(request):
                 error_info = exc_obj
                 error_msg = "%s: %s. Please try again!" % (error_type,error_info)
         if error_msg == "":
-            outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+            outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
     
-    return {"report_quarter":report_q,
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -293,6 +293,7 @@ def report_output(request):
         "org_activitie_ids":org_activitie_ids,
         "outputs_current":outputs_current,
         "outputs_previous":outputs_previous,
+        "current_year":datetime.datetime.now().year,
         "error_msg":error_msg,
         "save_msg":save_msg
     }
@@ -300,6 +301,7 @@ def report_output(request):
 @login_required
 @render_to("mhcdashboardapp/report_output_temp.html")
 def report_output_temp(request,qid):
+    tmp_username_list = ["Admin","admin","NMahajan","DGagne","test"]
     error_msg = ""
     save_msg = ""
     login_user = MyUser.objects.get(user=request.user)
@@ -312,9 +314,8 @@ def report_output_temp(request,qid):
     mhc_activitie_ids = []
     org_activities = []
     org_activitie_ids = []
-    outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')   
-    
-    #outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+    outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+
     for op in outputs_current:
         if not (op.orgnization_activity.workplan_area in workplan_areas):
             workplan_areas.append(op.orgnization_activity.workplan_area)
@@ -325,11 +326,11 @@ def report_output_temp(request,qid):
             org_activities.append(op.orgnization_activity)
             org_activitie_ids.append(op.orgnization_activity.id)       
     if report_q > 1:
-        outputs_previous = Output.objects.filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
+        outputs_previous = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter__lt=report_q).filter(orgnization_activity__organization__id=org_id)
     else:
         outputs_previous = None
-    
-    outputs_report = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+
+    outputs_report = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
     if request.method == 'POST':
         # pre-select Workplan Area, MHC Activity, Org Activity as filters
         if request.POST["OrgActID"]:
@@ -389,7 +390,6 @@ def report_output_temp(request,qid):
                     else:
                         op.is_goal = -99
             try:
-                print op.is_goal
                 op.save()
             except Exception, e:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -397,10 +397,12 @@ def report_output_temp(request,qid):
                 error_info = exc_obj
                 error_msg = "%s: %s. Please try again!" % (error_type,error_info)
         if error_msg == "":
-            outputs_current = Output.objects.filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
+            outputs_current = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(active_quarter__quarter=report_q).filter(orgnization_activity__organization__id=org_id).order_by('id')
             save_msg = "Changes to Output have been saved!"
-    
-    return {"report_quarter":report_q,
+
+    return {
+        "report_quarter":report_q,
+        "report_year":datetime.datetime.now().year,
         "organization":organization,
         "select_options":select_options,
         "workplan_areas":workplan_areas,
@@ -410,8 +412,10 @@ def report_output_temp(request,qid):
         "org_activitie_ids":org_activitie_ids,
         "outputs_current":outputs_current,
         "outputs_previous":outputs_previous,
+        "current_year":datetime.datetime.now().year,
         "error_msg":error_msg,
-        "save_msg":save_msg
+        "save_msg":save_msg,
+        "tmp_username_list":tmp_username_list
     }
 
 '''-----------------------
@@ -453,7 +457,8 @@ def output_reportpage_1(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Report Template 2 - Bullet Bar
@@ -492,7 +497,8 @@ def output_reportpage_2(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,
     }
     
 # Report Builder with Template 1
@@ -505,14 +511,14 @@ def output_reportpage_builder(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -520,7 +526,7 @@ def output_reportpage_builder(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -531,7 +537,8 @@ def output_reportpage_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
 
 # Report Builder with Template 2
@@ -570,7 +577,8 @@ def output_reportpage_2_builder(request):
     return {
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
-        "barpiechart_data":outputs_summary_json
+        "barpiechart_data":outputs_summary_json,
+        "report_year":datetime.datetime.now().year,        
     }
     
 @login_required
@@ -592,14 +600,14 @@ def output_customreport(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -607,7 +615,7 @@ def output_customreport(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -640,14 +648,14 @@ def output_customreport_2(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", Q%d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         outputs_pf_summary = []
         for wpa in workplan_areas:
             tmp_outputs_pf_summary = collections.OrderedDict([
@@ -655,7 +663,7 @@ def output_customreport_2(request):
             ("WPA_name",wpa.description),
             ("perform",collections.OrderedDict([("Yes",0),("No",0),("NotReported",0),("TBD",0)]))
             ])
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 if wpa_output.is_goal is not None:
                     tmp_outputs_pf_summary["perform"][goal_choices[wpa_output.is_goal]] += 1
@@ -675,12 +683,13 @@ def output_customreport_2(request):
         "closed_reporting_quarters":closed_reporting_quarters,
         "workplan_directions":workplan_directions_json,
         "barpiechart_data":outputs_summary_json,
-        "highlight_text":highlight_text_json
+        "highlight_text":highlight_text_json,
+        "report_year":datetime.datetime.now().year,
     }
 
 # Export report as PDF
 @login_required
-def output_customreport_pdf(request):
+def output_customreport_pdf_2015(request):
     # Prepare data
     previous_report_quarter = report_quarter() - 1
     closed_reporting_quarters = "Quarter 1"
@@ -688,19 +697,19 @@ def output_customreport_pdf(request):
         previous_report_quarter =  1
     else:
         closed_reporting_quarters += "".join((", %d" % q for q in range(2,previous_report_quarter+1)))
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
     outputs_summary = []
     workplan_directions = WorkplanDirection.objects.all()
     wpds = []
     goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
     for wpd in workplan_directions:
         wpds.append({"str_id":wpd.str_id,"description":wpd.description})
-        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd)
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
         tmp_wpd_pf_summary = {"total":0,"Yes":0,"No":0,"NotReported":0,"TBD":0}
         wpa_list = []
         for wpa in workplan_areas:
             wpa_list.append({wpa.str_id:wpa.description})
-            wpa_outputs = Output.objects.filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
             for wpa_output in wpa_outputs:
                 tmp_wpd_pf_summary["total"] += 1
                 if wpa_output.is_goal is not None:
@@ -773,7 +782,7 @@ def output_customreport_pdf(request):
     pc.width = 95
     pc.height = 95
     pc.data = [outputs_summary[0]["perform"]["Yes"],outputs_summary[0]["perform"]["No"],outputs_summary[0]["perform"]["NotReported"],outputs_summary[0]["perform"]["TBD"]]
-#    pc.labels = ["Yes","Not Reported"] # pie chart label
+#    pc.labels = ["Yes","Not reported"] # pie chart label
     pc.slices.strokeWidth = 1
     pc.slices.strokeColor = HexColor("#FFFFFF")
     pc.slices[0].fillColor = HexColor("#41AB5D")
@@ -797,7 +806,7 @@ def output_customreport_pdf(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,286,"Yes")
-    p.drawString(110,286,str(outputs_summary[0]["perform"]["Yes"]))
+    p.drawString(115,286,str(outputs_summary[0]["perform"]["Yes"]))
     p.drawString(135,286,"%d%%" % round(outputs_summary[0]["perform"]["Yes"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -806,16 +815,16 @@ def output_customreport_pdf(request):
     p.rect(45,294,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,301,"No")
-    p.drawString(110,301,str(outputs_summary[0]["perform"]["No"]))
+    p.drawString(115,301,str(outputs_summary[0]["perform"]["No"]))
     p.drawString(135,301,"%d%%" % round(outputs_summary[0]["perform"]["No"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,305,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,309,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,316,"Not Report")
-    p.drawString(110,316,str(outputs_summary[0]["perform"]["NotReported"]))
+    p.drawString(60,316,"Not reported")
+    p.drawString(115,316,str(outputs_summary[0]["perform"]["NotReported"]))
     p.drawString(135,316,"%d%%" % round(outputs_summary[0]["perform"]["NotReported"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -824,7 +833,7 @@ def output_customreport_pdf(request):
     p.rect(45,324,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,331,"TBD")
-    p.drawString(110,331,str(outputs_summary[0]["perform"]["TBD"]))
+    p.drawString(115,331,str(outputs_summary[0]["perform"]["TBD"]))
     p.drawString(135,331,"%d%%" % round(outputs_summary[0]["perform"]["TBD"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,335,120,0.5,stroke=0,fill=1)
@@ -970,7 +979,7 @@ def output_customreport_pdf(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,586,"Yes")
-    p.drawString(110,586,str(outputs_summary[1]["perform"]["Yes"]))
+    p.drawString(115,586,str(outputs_summary[1]["perform"]["Yes"]))
     p.drawString(135,586,"%d%%" % round(outputs_summary[1]["perform"]["Yes"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -979,16 +988,16 @@ def output_customreport_pdf(request):
     p.rect(45,594,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,601,"No")
-    p.drawString(110,601,str(outputs_summary[1]["perform"]["No"]))
+    p.drawString(115,601,str(outputs_summary[1]["perform"]["No"]))
     p.drawString(135,601,"%d%%" % round(outputs_summary[1]["perform"]["No"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,605,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,609,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,616,"Not Report")
-    p.drawString(110,616,str(outputs_summary[1]["perform"]["NotReported"]))
+    p.drawString(60,616,"Not reported")
+    p.drawString(115,616,str(outputs_summary[1]["perform"]["NotReported"]))
     p.drawString(135,616,"%d%%" % round(outputs_summary[1]["perform"]["NotReported"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -997,7 +1006,7 @@ def output_customreport_pdf(request):
     p.rect(45,624,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,631,"TBD")
-    p.drawString(110,631,str(outputs_summary[1]["perform"]["TBD"]))
+    p.drawString(115,631,str(outputs_summary[1]["perform"]["TBD"]))
     p.drawString(135,631,"%d%%" % round(outputs_summary[1]["perform"]["TBD"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,635,120,0.5,stroke=0,fill=1)
@@ -1139,7 +1148,7 @@ def output_customreport_pdf(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)
     p.drawString(520,763,"Page 1 of 2")
     
@@ -1185,7 +1194,7 @@ def output_customreport_pdf(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,176,"Yes")
-    p.drawString(110,176,str(outputs_summary[2]["perform"]["Yes"]))
+    p.drawString(115,176,str(outputs_summary[2]["perform"]["Yes"]))
     p.drawString(135,176,"%d%%" % round(outputs_summary[2]["perform"]["Yes"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1194,16 +1203,16 @@ def output_customreport_pdf(request):
     p.rect(45,184,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,191,"No")
-    p.drawString(110,191,str(outputs_summary[2]["perform"]["No"]))
+    p.drawString(115,191,str(outputs_summary[2]["perform"]["No"]))
     p.drawString(135,191,"%d%%" % round(outputs_summary[2]["perform"]["No"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,195,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,199,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,206,"Not Report")
-    p.drawString(110,206,str(outputs_summary[2]["perform"]["NotReported"]))
+    p.drawString(60,206,"Not reported")
+    p.drawString(115,206,str(outputs_summary[2]["perform"]["NotReported"]))
     p.drawString(135,206,"%d%%" % round(outputs_summary[2]["perform"]["NotReported"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1212,7 +1221,7 @@ def output_customreport_pdf(request):
     p.rect(45,214,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,221,"TBD")
-    p.drawString(110,221,str(outputs_summary[2]["perform"]["TBD"]))
+    p.drawString(115,221,str(outputs_summary[2]["perform"]["TBD"]))
     p.drawString(135,221,"%d%%" % round(outputs_summary[2]["perform"]["TBD"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,225,120,0.5,stroke=0,fill=1)
@@ -1335,7 +1344,7 @@ def output_customreport_pdf(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,416,"Yes")
-    p.drawString(110,416,str(outputs_summary[3]["perform"]["Yes"]))
+    p.drawString(115,416,str(outputs_summary[3]["perform"]["Yes"]))
     p.drawString(135,416,"%d%%" % round(outputs_summary[3]["perform"]["Yes"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1344,16 +1353,16 @@ def output_customreport_pdf(request):
     p.rect(45,424,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,431,"No")
-    p.drawString(110,431,str(outputs_summary[3]["perform"]["No"]))
+    p.drawString(115,431,str(outputs_summary[3]["perform"]["No"]))
     p.drawString(135,431,"%d%%" % round(outputs_summary[3]["perform"]["No"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,435,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,439,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,446,"Not Report")
-    p.drawString(110,446,str(outputs_summary[3]["perform"]["NotReported"]))
+    p.drawString(60,446,"Not reported")
+    p.drawString(115,446,str(outputs_summary[3]["perform"]["NotReported"]))
     p.drawString(135,446,"%d%%" % round(outputs_summary[3]["perform"]["NotReported"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1362,7 +1371,7 @@ def output_customreport_pdf(request):
     p.rect(45,454,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,461,"TBD")
-    p.drawString(110,461,str(outputs_summary[3]["perform"]["TBD"]))
+    p.drawString(115,461,str(outputs_summary[3]["perform"]["TBD"]))
     p.drawString(135,461,"%d%%" % round(outputs_summary[3]["perform"]["TBD"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,465,120,0.5,stroke=0,fill=1)
@@ -1373,7 +1382,7 @@ def output_customreport_pdf(request):
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(180,410)
+    p.translate(180,380)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D1"].decode('base64'))),0,0,width=50,height=50)
     p.restoreState()
@@ -1386,13 +1395,13 @@ def output_customreport_pdf(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,245,385-h-h/10)    
+    parag.drawOn(p,245,355-h-h/10)    
     ###### WPA D2
     p.setStrokeColor(HexColor("#178BCA"))
     p.setFillColor(HexColor("#178BCA"))
     ####### Water Bubble
     p.saveState()
-    p.translate(380,410)
+    p.translate(380,380)
     p.scale(1,-1)
     p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
     # restore previous canvas settings
@@ -1406,7 +1415,7 @@ def output_customreport_pdf(request):
     parag = Paragraph(p_wpa,para_style)
     w,h = parag.wrap(120,80)
     p.setFillColor(HexColor("#DD7636"))
-    parag.drawOn(p,450,385-h-h/10)
+    parag.drawOn(p,450,355-h-h/10)
     
     
     ##### Narratives
@@ -1467,7 +1476,7 @@ def output_customreport_pdf(request):
     p.setFont("Helvetica",9)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,656,"Yes")
-    p.drawString(110,656,str(outputs_summary[4]["perform"]["Yes"]))
+    p.drawString(115,656,str(outputs_summary[4]["perform"]["Yes"]))
     p.drawString(135,656,"%d%%" % round(outputs_summary[4]["perform"]["Yes"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
     ###### Row 2 "No"
     p.setFillColor(HexColor("#808080"))
@@ -1476,16 +1485,16 @@ def output_customreport_pdf(request):
     p.rect(45,664,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,671,"No")
-    p.drawString(110,671,str(outputs_summary[4]["perform"]["No"]))
+    p.drawString(115,671,str(outputs_summary[4]["perform"]["No"]))
     p.drawString(135,671,"%d%%" % round(outputs_summary[4]["perform"]["No"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
-    ###### Row 3 "Not Report"
+    ###### Row 3 "Not reported"
     p.setFillColor(HexColor("#808080"))
     p.rect(40,675,120,0.5,stroke=0,fill=1)
     p.setFillColor(HexColor("#807DBA"))
     p.rect(45,679,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
-    p.drawString(60,686,"Not Report")
-    p.drawString(110,686,str(outputs_summary[4]["perform"]["NotReported"]))
+    p.drawString(60,686,"Not reported")
+    p.drawString(115,686,str(outputs_summary[4]["perform"]["NotReported"]))
     p.drawString(135,686,"%d%%" % round(outputs_summary[4]["perform"]["NotReported"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     ###### Row 4 "TBD"
     p.setFillColor(HexColor("#808080"))
@@ -1494,7 +1503,7 @@ def output_customreport_pdf(request):
     p.rect(45,694,9,9,stroke=0,fill=1)
     p.setFillColor(HexColor("#333333"))
     p.drawString(60,701,"TBD")
-    p.drawString(110,701,str(outputs_summary[4]["perform"]["TBD"]))
+    p.drawString(115,701,str(outputs_summary[4]["perform"]["TBD"]))
     p.drawString(135,701,"%d%%" % round(outputs_summary[4]["perform"]["TBD"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
     p.setFillColor(HexColor("#808080"))
     p.rect(40,705,120,0.5,stroke=0,fill=1)
@@ -1598,7 +1607,960 @@ def output_customreport_pdf(request):
     p.setFillColor(HexColor("#777777"))
     p.rect(35,750,540,0.5,stroke=0,fill=1)    
     p.setFont("Helvetica",8)
-    p.drawString(50,760,"* No outputs were designated to be reported in current quarter.")
+    p.drawString(50,760,"* No output to report in current quarter.")
+    p.setFont("Helvetica",9)    
+    p.drawString(520,763,"Page 2 of 2")    
+
+    ## Print Page 2
+    p.showPage()
+    
+    # Save Canvas
+    p.save()
+
+    return response
+
+@login_required
+def output_customreport_pdf_2016(request):
+    # Prepare data
+    previous_report_quarter = report_quarter() - 1
+    closed_reporting_quarters = "Quarter 1"
+    if previous_report_quarter < 1:
+        previous_report_quarter =  1
+    else:
+        closed_reporting_quarters += "".join((", %d" % q for q in range(2,previous_report_quarter+1)))
+    outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year)
+    outputs_summary = []
+    workplan_directions = WorkplanDirection.objects.all()
+    wpds = []
+    wpa_text = {}
+    goal_choices = {1:"Yes",0:"No",-1:"NotReported",-99:"TBD"}
+    for wpd in workplan_directions:
+        wpds.append({"str_id":wpd.str_id,"description":wpd.description})
+        workplan_areas = WorkplanArea.objects.filter(workplan_direction=wpd,year=datetime.datetime.now().year)
+        tmp_wpd_pf_summary = {"total":0,"Yes":0,"No":0,"NotReported":0,"TBD":0}
+        wpa_list = []
+        for wpa in workplan_areas:
+            wpa_list.append({wpa.str_id:wpa.description})
+            wpa_text[wpa.str_id] = wpa.description
+            wpa_outputs = Output.objects.filter(orgnization_activity__year=datetime.datetime.now().year).filter(orgnization_activity__workplan_area=wpa).filter(active_quarter__quarter__lte=previous_report_quarter)
+            for wpa_output in wpa_outputs:
+                tmp_wpd_pf_summary["total"] += 1
+                if wpa_output.is_goal is not None:
+                    tmp_wpd_pf_summary[goal_choices[wpa_output.is_goal]] += 1
+        outputs_summary.append({"name":"%s: %s"% (wpd.str_id,wpd.description),"wpa":wpa_list,"perform":tmp_wpd_pf_summary})
+    
+    # Generate PDF report
+    ## Prepare HttpResponse for downloading PDF file
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"]="attachment; filename=\"report_%s.pdf\"" % datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    ## PDF canvas config
+    p_pagesize = letter # use letter as PDF page size
+    p_isbottomup = 0 # place the origin (0,0) at the top left
+    p_margin = 0.4 * inch # set page margin to 0.4 inch
+    p_pagewidth = defaultPageSize[0]
+    p_pageheight = defaultPageSize[1]
+    styles = getSampleStyleSheet()
+    p_width, p_height = p_pagesize # get width and height of pagesize
+    
+    ## Initiate pdf canvas
+    p = canvas.Canvas(response,pagesize=p_pagesize,bottomup=p_isbottomup)
+    
+    # set page margin by moving origin point to the top left margin point
+#    p.translate(p_margin,p_margin)
+    
+    ## Page 1
+    ### Report Title
+    p_title = "Report Summary"
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(40,60)
+    txtobj.setFont("Helvetica-BoldOblique",20)
+    txtobj.textLine(p_title)
+    p.setFillColor(HexColor("#08426A"))
+    p.drawText(txtobj)
+    #### Report Sub-title
+    p_title = "Outputs in 2016 %s" % closed_reporting_quarters
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(140,100)
+    txtobj.setFont("Helvetica-BoldOblique",18)
+    txtobj.textLine(p_title)
+    p.setFillColor(HexColor("#08426A"))
+    p.drawText(txtobj)
+    p.rect(30,120,552,3,stroke=0,fill=1)
+    #### MHC logo
+    p.saveState()
+    p.translate(430,115)
+    p.scale(1,-1)
+    mhc_logoimg_path = SOTRAGE_ROOTPATH.replace("data","img") + "mhc_logo.png"
+    p.drawImage(mhc_logoimg_path,0,0,130,90,mask='auto')
+    p.restoreState()
+    
+    ### WPD A
+    #### WPD A heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[0]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,160)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD A body
+    
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[0]["perform"]["Yes"],outputs_summary[0]["perform"]["No"],outputs_summary[0]["perform"]["NotReported"],outputs_summary[0]["perform"]["TBD"]]
+#    pc.labels = ["Yes","Not reported"] # pie chart label
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+#    #popout pie slice
+#    pc.slices[0].popout = 10
+#    pc.slices[0].labelRadius = 1.75
+#    r,g,b = rgb_to_scale(221,118,54)
+#    pc.slices[0].fontColor = Color(r,g,b,1)
+    d.add(pc)
+    renderPDF.draw(d,p,40,195)
+    
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,295,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,299,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,306,"Yes")
+    p.drawString(115,306,str(outputs_summary[0]["perform"]["Yes"]))
+    p.drawString(135,306,"%d%%" % round(outputs_summary[0]["perform"]["Yes"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,310,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,314,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,321,"No")
+    p.drawString(115,321,str(outputs_summary[0]["perform"]["No"]))
+    p.drawString(135,321,"%d%%" % round(outputs_summary[0]["perform"]["No"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))
+    ###### Row 3 "Not reported"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,325,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,329,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,336,"Not reported")
+    p.drawString(115,336,str(outputs_summary[0]["perform"]["NotReported"]))
+    p.drawString(135,336,"%d%%" % round(outputs_summary[0]["perform"]["NotReported"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,340,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,344,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,351,"TBD")
+    p.drawString(115,351,str(outputs_summary[0]["perform"]["TBD"]))
+    p.drawString(135,351,"%d%%" % round(outputs_summary[0]["perform"]["TBD"]*1.0/outputs_summary[0]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,355,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    
+    ###### WPA A1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    # temporarily change the canvas by changing origin point and change scale to flip the image
+    p.saveState()
+    p.translate(180,240)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()# restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A1: %s" % wpa_text["A1"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(300,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,215-h-h/10)  
+    ###### WPA A2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,330)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A2: %s" % wpa_text["A2"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(130,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,300-h-h/10)    
+    ###### WPA A3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,330)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "A3: %s" % wpa_text["A3"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,300-h-h/10)
+#    ###### WPA A4
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(380,320)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["A4"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState()# restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "A4: Supporting Policy Environment: Promote Adoption of Equitable Regional Housing Strategy"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,445,295-h-h/10)
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-A"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 392
+    if h == 12: # one row text
+        parag_y += 0
+    elif h == 24: # two rows
+        parag_y -= 15
+    elif h == 36: # three rows
+        parag_y -= 35  
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,430,530,1.5,stroke=0,fill=1)    
+    
+    ### WPD B
+    
+    #### WPD B heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[1]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,470)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD B body
+    
+    #### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[1]["perform"]["Yes"],outputs_summary[1]["perform"]["No"],outputs_summary[1]["perform"]["NotReported"],outputs_summary[1]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,505)
+    
+    #### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,605,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,609,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,616,"Yes")
+    p.drawString(115,616,str(outputs_summary[1]["perform"]["Yes"]))
+    p.drawString(135,616,"%d%%" % round(outputs_summary[1]["perform"]["Yes"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,620,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,624,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,631,"No")
+    p.drawString(115,631,str(outputs_summary[1]["perform"]["No"]))
+    p.drawString(135,631,"%d%%" % round(outputs_summary[1]["perform"]["No"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))
+    ###### Row 3 "Not reported"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,635,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,639,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,646,"Not reported")
+    p.drawString(115,646,str(outputs_summary[1]["perform"]["NotReported"]))
+    p.drawString(135,646,"%d%%" % round(outputs_summary[1]["perform"]["NotReported"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,650,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,654,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,661,"TBD")
+    p.drawString(115,661,str(outputs_summary[1]["perform"]["TBD"]))
+    p.drawString(135,661,"%d%%" % round(outputs_summary[1]["perform"]["TBD"]*1.0/outputs_summary[1]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,665,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA B1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,565)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "B1: %s" % wpa_text["B1"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,545-h-h/10)
+    ###### WPA B2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,565)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+    ####### Paragraph
+    p_wpa = "B2: %s" % wpa_text["B2"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,545-h-h/10)    
+    ###### WPA B3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,645)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+   ####### Paragraph
+    p_wpa = "B3: %s" % wpa_text["B3"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,625-h-h/10)
+    ###### WPA B4
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,645)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B4"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState() # restore previous canvas settings
+   ####### Paragraph
+    p_wpa = "B4: %s" % wpa_text["B4"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,445,625-h-h/10)
+#    ###### WPA B5
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(180,650)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B5"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState() # restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "B5: Supporting Policy Environment: Incentivize Businesses Providing Good Jobs to Locate Near Transit"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,245,625-h-h/10)
+#    ###### WPA B6
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(380,650)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["B6"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState() # restore previous canvas settings
+#    ####### Paragraph
+#    p_wpa = "B6: Increase and Align Financial Resources for Commercial Facilities and Tenants Near Transit"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,445,625-h-h/10)
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-B"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 700
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    #### Page footer
+    p.setFillColor(HexColor("#777777"))
+    p.rect(35,750,540,0.5,stroke=0,fill=1)
+    p.setFont("Helvetica",8)
+    p.drawString(50,760,"* No output to report in current quarter.")
+    p.setFont("Helvetica",9)
+    p.drawString(520,763,"Page 1 of 2")
+    
+    ## Print Page 1
+    p.showPage()
+    
+    ## Page 2
+    
+    ### WPD C
+    #### WPD C heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[2]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,60)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+    
+    #### WPD C body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[2]["perform"]["Yes"],outputs_summary[2]["perform"]["No"],outputs_summary[2]["perform"]["NotReported"],outputs_summary[2]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,65)
+    
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,165,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,169,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,176,"Yes")
+    p.drawString(115,176,str(outputs_summary[2]["perform"]["Yes"]))
+    p.drawString(135,176,"%d%%" % round(outputs_summary[2]["perform"]["Yes"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,180,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,184,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,191,"No")
+    p.drawString(115,191,str(outputs_summary[2]["perform"]["No"]))
+    p.drawString(135,191,"%d%%" % round(outputs_summary[2]["perform"]["No"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))
+    ###### Row 3 "Not reported"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,195,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,199,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,206,"Not reported")
+    p.drawString(115,206,str(outputs_summary[2]["perform"]["NotReported"]))
+    p.drawString(135,206,"%d%%" % round(outputs_summary[2]["perform"]["NotReported"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,210,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,214,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,221,"TBD")
+    p.drawString(115,221,str(outputs_summary[2]["perform"]["TBD"]))
+    p.drawString(135,221,"%d%%" % round(outputs_summary[2]["perform"]["TBD"]*1.0/outputs_summary[2]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,225,120,0.5,stroke=0,fill=1)
+    
+    #### WPA
+    ###### WPA C1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,150)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph   
+    p_wpa = "C1: %s" % wpa_text["C1"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,125-h-h/10)    
+    ###### WPA C2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,150)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "C2: %s" % wpa_text["C2"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,125-h-h/10)    
+#    ###### WPA C3
+#    p.setStrokeColor(HexColor("#178BCA"))
+#    p.setFillColor(HexColor("#178BCA"))
+#    ####### Water Bubble
+#    p.saveState()
+#    p.translate(180,210)
+#    p.scale(1,-1)
+#    p.drawImage(ImageReader(StringIO.StringIO(request.POST["C3"].decode('base64'))),0,0,width=50,height=50)
+#    p.restoreState()
+#    ####### Paragraph
+#    p_wpa = "C3: Ensuring Accessible Bus Service Routes for Low-Income Communities"
+#    para_style = styles["Heading4"]
+#    para_style.fontName = "Helvetica"
+#    para_style.fontSize = 11
+#    para_style.textColor = HexColor("#777777")
+#    parag = Paragraph(p_wpa,para_style)
+#    w,h = parag.wrap(120,80)
+#    p.setFillColor(HexColor("#DD7636"))
+#    parag.drawOn(p,245,185-h-h/10)
+    
+    #### Narratives
+    p_wpd_narratives = request.POST["TEXT-C"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 240
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,270,530,1.5,stroke=0,fill=1)    
+    
+    ### WPD D
+    #### WPD D heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[3]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,300)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+
+    #### WPD D body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[3]["perform"]["Yes"],outputs_summary[3]["perform"]["No"],outputs_summary[3]["perform"]["NotReported"],outputs_summary[3]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,305)
+
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,405,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,409,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,416,"Yes")
+    p.drawString(115,416,str(outputs_summary[3]["perform"]["Yes"]))
+    p.drawString(135,416,"%d%%" % round(outputs_summary[3]["perform"]["Yes"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,420,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,424,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,431,"No")
+    p.drawString(115,431,str(outputs_summary[3]["perform"]["No"]))
+    p.drawString(135,431,"%d%%" % round(outputs_summary[3]["perform"]["No"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))
+    ###### Row 3 "Not reported"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,435,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,439,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,446,"Not reported")
+    p.drawString(115,446,str(outputs_summary[3]["perform"]["NotReported"]))
+    p.drawString(135,446,"%d%%" % round(outputs_summary[3]["perform"]["NotReported"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,450,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,454,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,461,"TBD")
+    p.drawString(115,461,str(outputs_summary[3]["perform"]["TBD"]))
+    p.drawString(135,461,"%d%%" % round(outputs_summary[3]["perform"]["TBD"]*1.0/outputs_summary[3]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,465,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA D1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,380)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D1: %s" % wpa_text["D1"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,355-h-h/10)    
+    ###### WPA D2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,380)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
+    # restore previous canvas settings
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D2: %s" % wpa_text["D2"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,355-h-h/10)
+    ###### WPA D3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,460)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["D2"].decode('base64'))),0,0,width=50,height=50)
+    # restore previous canvas settings
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "D3: %s" % wpa_text["D3"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(160,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,440-h-h/10)    
+    
+    
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-D"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 480
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    ##### Break Line
+    p.setStrokeColor(HexColor("#C0C0C0"))
+    p.setFillColor(HexColor("#C0C0C0"))
+    p.rect(40,510,530,1.5,stroke=0,fill=1)    
+
+    ### WPD E
+    #### WPD E heading
+    p_title_wpd = "Work Plan Direction %s" % outputs_summary[4]["name"]
+    txtobj = p.beginText()
+    txtobj.setTextOrigin(60,540)
+    txtobj.setFont("Helvetica-Bold",14)
+    txtobj.textLine(p_title_wpd)
+    p.setFillColor(HexColor("#333333"))
+    p.drawText(txtobj)
+
+    #### WPD E body
+    ##### Pie chart
+    d = Drawing(190,190)
+    pc = Pie()
+    pc.x = 10
+    pc.y = 0
+    pc.width = 95
+    pc.height = 95
+    pc.data = [outputs_summary[4]["perform"]["Yes"],outputs_summary[4]["perform"]["No"],outputs_summary[4]["perform"]["NotReported"],outputs_summary[4]["perform"]["TBD"]]
+    pc.slices.strokeWidth = 1
+    pc.slices.strokeColor = HexColor("#FFFFFF")
+    pc.slices[0].fillColor = HexColor("#41AB5D")
+    pc.slices[1].fillColor = HexColor("#E08214")
+    pc.slices[2].fillColor = HexColor("#807DBA")
+    pc.slices[3].fillColor = HexColor("#307DBA")
+    d.add(pc)
+    renderPDF.draw(d,p,40,545)
+    ##### Pie chart legend
+    ###### Row 1 "Yes"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,645,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#41AB5D"))
+    p.rect(45,649,9,9,stroke=0,fill=1)
+    p.setFont("Helvetica",9)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,656,"Yes")
+    p.drawString(115,656,str(outputs_summary[4]["perform"]["Yes"]))
+    p.drawString(135,656,"%d%%" % round(outputs_summary[4]["perform"]["Yes"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
+    ###### Row 2 "No"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,660,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#E08214"))
+    p.rect(45,664,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,671,"No")
+    p.drawString(115,671,str(outputs_summary[4]["perform"]["No"]))
+    p.drawString(135,671,"%d%%" % round(outputs_summary[4]["perform"]["No"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))
+    ###### Row 3 "Not reported"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,675,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#807DBA"))
+    p.rect(45,679,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,686,"Not reported")
+    p.drawString(115,686,str(outputs_summary[4]["perform"]["NotReported"]))
+    p.drawString(135,686,"%d%%" % round(outputs_summary[4]["perform"]["NotReported"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
+    ###### Row 4 "TBD"
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,690,120,0.5,stroke=0,fill=1)
+    p.setFillColor(HexColor("#307DBA"))
+    p.rect(45,694,9,9,stroke=0,fill=1)
+    p.setFillColor(HexColor("#333333"))
+    p.drawString(60,701,"TBD")
+    p.drawString(115,701,str(outputs_summary[4]["perform"]["TBD"]))
+    p.drawString(135,701,"%d%%" % round(outputs_summary[4]["perform"]["TBD"]*1.0/outputs_summary[4]["perform"]["total"]*100,0))    
+    p.setFillColor(HexColor("#808080"))
+    p.rect(40,705,120,0.5,stroke=0,fill=1)
+    
+    ##### WPA
+    ###### WPA E1
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,620)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E1"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E1: %s" % wpa_text["E1"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,595-h-h/10)    
+    ###### WPA E2
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,620)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E2"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E2: %s" % wpa_text["E2"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,595-h-h/10)
+    ###### WPA E3
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(180,690)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E3"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E3: %s" % wpa_text["E3"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,245,665-h-h/10)    
+    ###### WPA E4
+    p.setStrokeColor(HexColor("#178BCA"))
+    p.setFillColor(HexColor("#178BCA"))
+    ####### Water Bubble
+    p.saveState()
+    p.translate(380,690)
+    p.scale(1,-1)
+    p.drawImage(ImageReader(StringIO.StringIO(request.POST["E4"].decode('base64'))),0,0,width=50,height=50)
+    p.restoreState()
+    ####### Paragraph
+    p_wpa = "E4: %s" % wpa_text["E4"]
+    para_style = styles["Heading4"]
+    para_style.fontName = "Helvetica"
+    para_style.fontSize = 11
+    para_style.textColor = HexColor("#777777")
+    parag = Paragraph(p_wpa,para_style)
+    w,h = parag.wrap(120,80)
+    p.setFillColor(HexColor("#DD7636"))
+    parag.drawOn(p,450,670-h-h/10)
+
+    ##### Narratives
+    p_wpd_narratives = request.POST["TEXT-E"]
+    para_style = styles["BodyText"]
+    para_style.fontName = "Helvetica-Oblique"
+    para_style.textColor = HexColor("#DD7636")
+    parag = Paragraph(p_wpd_narratives,para_style)
+    w,h = parag.wrap(500,60)
+    p.setFillColor(HexColor("#DD7636"))
+    parag_y = 720
+    if h == 12:
+        parag_y += 10
+    elif h == 24:
+        parag_y -= 10
+    elif h == 36:
+        parag_y -= 25    
+    parag.drawOn(p,50,parag_y)
+    
+    #### Page footer
+    p.setFillColor(HexColor("#777777"))
+    p.rect(35,750,540,0.5,stroke=0,fill=1)    
+    p.setFont("Helvetica",8)
+    p.drawString(50,760,"* No output to report in current quarter.")
     p.setFont("Helvetica",9)    
     p.drawString(520,763,"Page 2 of 2")    
 
@@ -1636,7 +2598,7 @@ def output_exportbuilder(request):
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "Organization %s has no outputs in work plan direction %s in 2015 Quarter %s." % (org_name,wpd_description,q)
+                        error_msg = "Organization %s has no outputs in work plan direction %s in 2016 Quarter %s." % (org_name,wpd_description,q)
                     else:
                         error_msg = "Organization %s has no outputs in work plan direction %s." % (org_name,wpd_description)
                 else:
@@ -1646,20 +2608,23 @@ def output_exportbuilder(request):
                     wpd_description = WorkplanDirection.objects.get(id=int(request.GET["wpd"])).description
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "There is no outputs in work plan direction %s in 2015 Quarter %s." % (wpd_description,q)
+                        error_msg = "There is no outputs in work plan direction %s in 2016 Quarter %s." % (wpd_description,q)
                     else:                    
                         error_msg = "There is no outputs in work plan direction %s." % wpd_description
                 else:
                     if "q" in request.GET and request.GET["q"] != "":
                         q = request.GET["q"]
-                        error_msg = "There is no outputs in 2015 Quarter %s." % q
+                        error_msg = "There is no outputs in 2016 Quarter %s." % q
         elif "file" in request.GET and request.GET["file"] != "":
             download_file = request.GET["file"]
+    years = range(2015,datetime.datetime.now().year+1)
+    years.reverse()
     return {
             "error_msg":error_msg,
             "download_file":download_file,
             "organizations":organizations,
             "wpdirections":wpdirections,
+            "years":years,
             "reportingquarters":reportingquarters,
             }
 
@@ -1672,9 +2637,9 @@ class Echo(object):
         return value
 
 # Export Output as CSV file
-def exportcsv_output(request,org_id,wpd_id,q_id):
+def exportcsv_output(request,org_id,wpd_id,y_id,q_id):
     # get all outputs
-    outputs = Output.objects.all()
+    outputs = Output.objects.filter(orgnization_activity__year=y_id)
     redirect_url = ""
     
     if org_id and int(org_id) > 0:
@@ -1721,11 +2686,11 @@ def exportcsv_output(request,org_id,wpd_id,q_id):
                         output.orgnization_activity.str_id,
                         output.orgnization_activity.description,
                         output.active_quarter.quarter if output.active_quarter else "",
-                        output.description,
-                        output.location,
+                        smart_str(output.description),
+                        smart_str(output.location),
                         output.get_is_goal_display(),
-                        output.output_value,
-                        output.comment
+                        smart_str(output.output_value),
+                        smart_str(output.comment)
             )
             download_data.append(row_data)
 
@@ -1733,7 +2698,7 @@ def exportcsv_output(request,org_id,wpd_id,q_id):
         download_data.sort(key=lambda row:row[0])
         
         # export as CSV
-        tmp_name = "MHC_Dashboard_Outputs_MasterDownload_%s" % datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        tmp_name = "%d_MHC_Dashboard_Outputs_MasterDownload_%s" % (int(y_id),datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         csvfile_name = "%s.csv" % tmp_name
         #response = HttpResponse(content_type='text/csv')
         #response['Content-Disposition'] = 'attachment; filename="%s.csv"' % file_name
@@ -1786,12 +2751,14 @@ MHC_DASHBOARD_DATA_PATH = "C:/QLiu/MileHighConnectsApp/Data/csv/" # use this for
 # Import Workplan Area
 def importcsv_workplan_area(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"workplan_area.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"workplan_area_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 workplan_area = WorkplanArea(
-                    str_id=row[0].replace(" ",""),
-                    description=row[1].strip(),
+                    str_id = row[0].replace(" ",""),
+                    description = row[1].strip(),
+                    workplan_direction = WorkplanDirection.objects.get(str_id=row[2].strip()),
+                    year = datetime.datetime.now().year
                 )
                 workplan_area.save()
         return HttpResponse("Workplan Area - Import complete!")
@@ -1819,14 +2786,15 @@ def importcsv_organization(request):
 # Import MHC Activity
 def importcsv_mhc_activity(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"mhc_activity.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"mhc_activity_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 workplan_area_strid = row[0].replace(" ","")[:2]
                 mhc_activity = MHCActivity(
                     str_id=row[0].replace(" ",""),
-                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_strid) if workplan_area_strid != "" else None,
-                    description=row[1].strip()
+                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_strid,year=datetime.datetime.now().year) if workplan_area_strid != "" else None,
+                    description=row[1].strip(),
+                    year = datetime.datetime.now().year
                 )
                 mhc_activity.save()
         return HttpResponse("MHC Activity - Import complete!")
@@ -1837,7 +2805,7 @@ def importcsv_mhc_activity(request):
 # Import Organization Activity
 def importcsv_org_activity(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"organization_activity.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"organization_activity_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 str_ids = row[1].replace(" ","").split('.')
@@ -1847,11 +2815,12 @@ def importcsv_org_activity(request):
                 str_id = "%s.%d" % (mhc_activity_str_id,str_id_int)
                 org_activity = OrganizationActivity(
 #                    str_id=str_id,
-                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_str_id) if workplan_area_str_id != "" else None,
-                    mhc_activity=MHCActivity.objects.get(str_id=mhc_activity_str_id) if mhc_activity_str_id != "" else None,
+                    workplan_area=WorkplanArea.objects.get(str_id=workplan_area_str_id,year=datetime.datetime.now().year) if workplan_area_str_id != "" else None,
+                    mhc_activity=MHCActivity.objects.get(str_id=mhc_activity_str_id,year=datetime.datetime.now().year) if mhc_activity_str_id != "" else None,
                     organization=Organization.objects.get(abbreviation=row[0].strip()) if row[0] != "" else None,
                     description=row[2].strip(),
-                    origin_strid=row[1].replace(" ","")
+                    origin_strid=row[1].replace(" ",""),
+                    year = datetime.datetime.now().year
                 )
                 org_activity.save()
         return HttpResponse("Organization Activity - Import complete!")
@@ -1862,7 +2831,7 @@ def importcsv_org_activity(request):
 # Import Output
 def importcsv_output(request):
     try:
-        with open(MHC_DASHBOARD_DATA_PATH+"output.csv",'rb') as f:
+        with open(MHC_DASHBOARD_DATA_PATH+"output_%d.csv" % datetime.datetime.now().year,'rb') as f:
             reader = csv.reader(f)
             for row in reader:
                 str_ids = row[0].replace(" ","").split('.')
@@ -1871,10 +2840,10 @@ def importcsv_output(request):
                 org_activity_str_id_int = ord(str_ids[-1][-1])-96
                 org_activity_str_id = "%s.%d" % (mhc_activity_str_id,org_activity_str_id_int)
                 output = Output(
-                    orgnization_activity=OrganizationActivity.objects.get(origin_strid=row[0].replace(" ","")) if row[0] != "" else None,
+                    orgnization_activity=OrganizationActivity.objects.get(origin_strid=row[0].replace(" ",""),year=datetime.datetime.now().year) if row[0] != "" else None,
                     active_quarter=ActiveQuarter.objects.get(quarter=int(row[1].replace(" ",""))) if row[1] != "" else None,
                     description=row[2].strip().replace(",",""),
-                    output_value=row[3].strip().replace(",",""),
+                    #output_value=row[3].strip().replace(",",""),
                 )
                 output.save()
         return HttpResponse("Output - Import complete!")

@@ -80,7 +80,7 @@ rect:hover {  opacity:0.8; }
 						</div>
 					</div>
 				</div>
-				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/">
+				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/workplanarea/?year=2016">
 					<div class="panel-footer">
 						<span class="pull-left">View All Workplan Areas</span>
 						<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -103,7 +103,7 @@ rect:hover {  opacity:0.8; }
 						</div>
 					</div>
 				</div>
-				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/">
+				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/mhcactivity/?year=2016">
 					<div class="panel-footer">
 						<span class="pull-left">View All MHC Activities</span>
 						<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -152,7 +152,7 @@ rect:hover {  opacity:0.8; }
 						</div>
 					</div>
 				</div>
-				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/">
+				<a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/organizationactivity/?year=2016">
 					<div class="panel-footer">
 						<span class="pull-left">View All Organization Activities</span>
 						<span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -178,7 +178,7 @@ rect:hover {  opacity:0.8; }
         {% if user|has_group:"Non-profit Staff" %}
 				<a href="{% setting 'ROOT_APP_URL' %}/output/report/">
         {% else %}
-        <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/">
+        <a href="{% setting 'ADMIN_ROOT_URL' %}/admin/mhcdashboardapp/output/?orgnization_activity__year=2016">
         {% endif %}
 					<div class="panel-footer">
 						<span class="pull-left">View All Outputs</span>
@@ -234,7 +234,7 @@ rect:hover {  opacity:0.8; }
                     <div>Show Activities in 
 						<label>
 							<select id="bar-pie-chart-2-select" name="bar-pie-chart-2-select" class="form-control input-sm">
-                                <option value="0">2015</option>
+                                <option value="0">2016</option>
                                 <option value="1">Q1</option>
                                 <option value="2">Q2</option>
                                 <option value="3">Q3</option>
